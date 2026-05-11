@@ -1,0 +1,182 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+#app {
+  width: 100%;
+  min-height: 100vh;
+  font-family: var(--font-sans, sans-serif);
+  display: flex;
+  flex-direction: column;
+}
+
+.screen { display: none; width: 100%; min-height: 100vh; flex-direction: column; }
+.screen.active { display: flex; }
+
+/* ── 選択画面 ── */
+#select-screen {
+  background: #111827;
+}
+
+#select-area {
+  display: flex;
+  flex: 1;
+}
+
+.half {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: filter 0.12s;
+  position: relative;
+}
+.half:active { filter: brightness(1.15); }
+
+#half-big { background: #b91c1c; }
+#half-small { background: #1d4ed8; }
+
+.half-label {
+  font-size: 36px;
+  font-weight: 500;
+  color: white;
+  letter-spacing: 0.06em;
+  pointer-events: none;
+}
+
+#divider {
+  width: 3px;
+  background: #111827;
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+
+#history-bar {
+  padding: 12px 16px 20px;
+  background: #0d1117;
+  border-top: 0.5px solid rgba(255,255,255,0.1);
+  min-height: 60px;
+}
+
+#history-title {
+  font-size: 10px;
+  color: rgba(255,255,255,0.3);
+  letter-spacing: 0.12em;
+  margin-bottom: 8px;
+}
+
+#history-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.chip {
+  padding: 4px 11px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.chip-big { background: rgba(185,28,28,0.3); color: #fca5a5; border: 0.5px solid rgba(185,28,28,0.6); }
+.chip-small { background: rgba(29,78,216,0.3); color: #93c5fd; border: 0.5px solid rgba(29,78,216,0.6); }
+
+/* ── 結果画面 ── */
+#result-screen {
+  align-items: center;
+  justify-content: center;
+}
+
+#result-screen.big-result { background: #b91c1c; }
+#result-screen.small-result { background: #1d4ed8; }
+
+#result-text {
+  font-size: 72px;
+  font-weight: 500;
+  color: white;
+  letter-spacing: 0.08em;
+  margin-bottom: 60px;
+}
+
+#next-btn {
+  background: rgba(255,255,255,0.15);
+  color: white;
+  border: 2px solid rgba(255,255,255,0.5);
+  border-radius: 50px;
+  padding: 16px 48px;
+  font-size: 18px;
+  font-weight: 500;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: background 0.15s;
+}
+#next-btn:active { background: rgba(255,255,255,0.28); }
+
+.chip-new { animation: popin 0.25s ease; }
+@keyframes popin {
+  from { opacity: 0; transform: scale(0.6); }
+  to { opacity: 1; transform: scale(1); }
+}
+</style>
+
+<div id="app">
+  <div id="select-screen" class="screen active">
+    <div id="select-area">
+      <div class="half" id="half-big" onclick="choose('big')">
+        <span class="half-label">大きい</span>
+      </div>
+      <div id="divider"></div>
+      <div class="half" id="half-small" onclick="choose('small')">
+        <span class="half-label">小さい</span>
+      </div>
+    </div>
+    <div id="history-bar">
+      <div id="history-title">履歴（最新20件）</div>
+      <div id="history-chips"></div>
+    </div>
+  </div>
+
+  <div id="result-screen" class="screen">
+    <div id="result-text"></div>
+    <button id="next-btn" onclick="goBack()">次の選択へ</button>
+  </div>
+</div>
+
+<script>
+const MAX = 20;
+let history = [];
+
+function choose(type) {
+  history.unshift(type);
+  if (history.length > MAX) history = history.slice(0, MAX);
+
+  const rs = document.getElementById('result-screen');
+  rs.className = 'screen';
+  rs.classList.add(type === 'big' ? 'big-result' : 'small-result');
+  document.getElementById('result-text').textContent = type === 'big' ? '大きい' : '小さい';
+
+  document.getElementById('select-screen').classList.remove('active');
+  rs.classList.add('active');
+}
+
+function goBack() {
+  document.getElementById('result-screen').classList.remove('active');
+  document.getElementById('select-screen').classList.add('active');
+  renderHistory();
+}
+
+function renderHistory() {
+  const el = document.getElementById('history-chips');
+  el.innerHTML = '';
+  history.forEach((t, i) => {
+    const c = document.createElement('span');
+    c.className = 'chip ' + (t === 'big' ? 'chip-big' : 'chip-small') + (i === 0 ? ' chip-new' : '');
+    c.textContent = t === 'big' ? '大きい' : '小さい';
+    el.appendChild(c);
+  });
+}
+</script>
