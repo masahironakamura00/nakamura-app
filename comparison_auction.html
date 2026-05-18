@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>比較軸オークション ── パネルメーカー</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Zen+Antique&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f4ead7;
+    --paper-deep:#ece0c4;
+    --ink:#2a2018;
+    --ink-soft:#5a4a38;
+    --crust:#b9722e;
+    --crust-deep:#8f5212;
+    --crust-glow:#e09a44;
+    --big:#3d7a3a;       /* 大きく見せる = 緑 */
+    --big-soft:#d6e8cf;
+    --small:#3a6b8a;     /* 小さく見せる = 青 */
+    --small-soft:#cfe0e8;
+    --line:#cbb98e;
+    --shadow:rgba(60,40,20,.28);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    font-family:'Zen Kaku Gothic New',sans-serif;
+    background:var(--paper);
+    background-image:
+      radial-gradient(circle at 18% 12%, rgba(224,154,68,.12), transparent 38%),
+      radial-gradient(circle at 82% 78%, rgba(58,107,138,.10), transparent 42%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  .wrap{max-width:920px;margin:0 auto;padding:26px 20px 80px;}
+
+  /* ---------- header ---------- */
+  header.masthead{
+    text-align:center;
+    border-bottom:3px double var(--line);
+    padding-bottom:18px;margin-bottom:26px;
+    position:relative;
+  }
+  .kicker{
+    font-family:'Zen Antique',serif;
+    font-size:13px;letter-spacing:.32em;
+    color:var(--crust-deep);
+    text-transform:none;
+  }
+  h1.title{
+    font-family:'DM Serif Display','Zen Antique',serif;
+    font-size:clamp(30px,6.4vw,52px);
+    line-height:1.05;
+    margin:6px 0 4px;
+    color:var(--ink);
+  }
+  h1.title em{font-style:italic;color:var(--crust);}
+  .subtitle{
+    font-size:13px;color:var(--ink-soft);letter-spacing:.06em;
+  }
+  .stamp{
+    position:absolute;top:-6px;right:2px;
+    width:74px;height:74px;border-radius:50%;
+    border:2.5px solid var(--crust-deep);
+    color:var(--crust-deep);
+    display:flex;align-items:center;justify-content:center;
+    text-align:center;font-family:'Zen Antique',serif;
+    font-size:10px;line-height:1.3;letter-spacing:.04em;
+    transform:rotate(-13deg);
+    opacity:.78;
+  }
+  @media(max-width:560px){.stamp{display:none;}}
+
+  /* ---------- question banner ---------- */
+  .question-card{
+    background:linear-gradient(170deg,#332720,#1f1813);
+    color:#f4ead7;
+    border-radius:14px;
+    padding:24px 22px;
+    margin-bottom:28px;
+    box-shadow:0 14px 30px var(--shadow);
+    position:relative;overflow:hidden;
+  }
+  .question-card::after{
+    content:"1,248";
+    position:absolute;right:-14px;bottom:-34px;
+    font-family:'DM Serif Display',serif;
+    font-size:150px;color:rgba(224,154,68,.10);
+    font-style:italic;pointer-events:none;
+  }
+  .question-card .q-label{
+    font-family:'Zen Antique',serif;font-size:12px;
+    letter-spacing:.22em;color:var(--crust-glow);margin-bottom:8px;
+  }
+  .question-card .q-text{
+    font-size:clamp(17px,3.6vw,22px);font-weight:700;line-height:1.5;
+  }
+  .question-card .q-text b{color:var(--crust-glow);font-size:1.22em;}
+
+  /* ---------- panels / steps ---------- */
+  .screen{display:none;animation:fade .45s ease;}
+  .screen.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+
+  .section-tag{
+    display:inline-block;
+    font-family:'Zen Antique',serif;
+    background:var(--ink);color:var(--paper);
+    font-size:12px;letter-spacing:.14em;
+    padding:5px 14px;border-radius:20px;margin-bottom:14px;
+  }
+
+  /* ---------- choice ---------- */
+  .field-label{
+    font-weight:700;font-size:15px;margin:22px 0 10px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .field-label .num{
+    background:var(--crust);color:#fff;
+    width:24px;height:24px;border-radius:50%;
+    display:inline-flex;align-items:center;justify-content:center;
+    font-size:13px;font-family:'Zen Antique',serif;flex:0 0 auto;
+  }
+  .choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:480px){.choice-grid{grid-template-columns:1fr;}}
+  .choice{
+    border:2.5px solid var(--line);
+    border-radius:14px;
+    padding:20px 16px;
+    background:#fbf4e4;
+    cursor:pointer;
+    text-align:center;
+    transition:transform .15s ease,box-shadow .15s ease,border-color .15s;
+    position:relative;
+    user-select:none;
+  }
+  .choice:active{transform:scale(.97);}
+  .choice .ico{font-size:38px;line-height:1;}
+  .choice .c-title{font-weight:900;font-size:18px;margin:8px 0 3px;}
+  .choice .c-sub{font-size:12px;color:var(--ink-soft);line-height:1.5;}
+  .choice[data-v="big"].sel{
+    border-color:var(--big);background:var(--big-soft);
+    box-shadow:0 8px 0 -2px var(--big),0 12px 22px var(--shadow);
+  }
+  .choice[data-v="small"].sel{
+    border-color:var(--small);background:var(--small-soft);
+    box-shadow:0 8px 0 -2px var(--small),0 12px 22px var(--shadow);
+  }
+  .choice .check{
+    position:absolute;top:10px;right:12px;font-size:18px;
+    opacity:0;transition:opacity .15s;
+  }
+  .choice.sel .check{opacity:1;}
+
+  /* ---------- text inputs ---------- */
+  textarea,input[type=text]{
+    width:100%;font-family:inherit;
+    border:2px solid var(--line);
+    border-radius:11px;
+    background:#fbf4e4;
+    padding:14px 15px;
+    font-size:16px;color:var(--ink);
+    resize:none;line-height:1.6;
+    transition:border-color .15s,box-shadow .15s;
+  }
+  textarea:focus,input:focus{
+    outline:none;border-color:var(--crust);
+    box-shadow:0 0 0 3px rgba(185,114,46,.18);
+  }
+  .counter{
+    text-align:right;font-size:12px;color:var(--ink-soft);
+    margin-top:5px;font-family:'Zen Antique',serif;
+  }
+  .hint{
+    font-size:12.5px;color:var(--ink-soft);
+    background:rgba(203,185,142,.22);
+    border-left:3px solid var(--crust);
+    padding:8px 12px;border-radius:0 8px 8px 0;
+    margin:8px 0 4px;line-height:1.6;
+  }
+
+  /* ---------- buttons ---------- */
+  .btn-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px;}
+  button.act{
+    flex:1;min-width:140px;
+    font-family:'Zen Kaku Gothic New',sans-serif;font-weight:700;
+    font-size:16px;
+    border:none;border-radius:12px;
+    padding:16px 18px;cursor:pointer;
+    transition:transform .12s ease,filter .15s;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  button.act:active{transform:translateY(2px);}
+  .btn-primary{
+    background:linear-gradient(180deg,var(--crust-glow),var(--crust));
+    color:#fff;box-shadow:0 6px 0 -1px var(--crust-deep),0 10px 18px var(--shadow);
+  }
+  .btn-ghost{
+    background:transparent;color:var(--ink);
+    border:2px solid var(--line)!important;
+  }
+  .btn-dark{
+    background:var(--ink);color:var(--paper);
+    box-shadow:0 6px 0 -1px #000,0 10px 18px var(--shadow);
+  }
+  button.act:disabled{opacity:.4;cursor:not-allowed;filter:grayscale(.4);}
+
+  /* ---------- preview panel ---------- */
+  .preview-area{margin-top:8px;}
+  .auction-panel{
+    border-radius:18px;
+    padding:34px 30px 30px;
+    position:relative;overflow:hidden;
+    box-shadow:0 18px 40px var(--shadow);
+    color:#fff;
+    min-height:300px;
+    display:flex;flex-direction:column;
+  }
+  .auction-panel.big{
+    background:
+      radial-gradient(circle at 78% 14%, rgba(255,255,255,.16), transparent 45%),
+      linear-gradient(160deg,#4f9648,#255c22);
+  }
+  .auction-panel.small{
+    background:
+      radial-gradient(circle at 78% 14%, rgba(255,255,255,.16), transparent 45%),
+      linear-gradient(160deg,#4a7d9c,#27475c);
+  }
+  .auction-panel .verdict{
+    display:inline-flex;align-items:center;gap:8px;
+    align-self:flex-start;
+    background:rgba(255,255,255,.16);
+    border:1.5px solid rgba(255,255,255,.4);
+    padding:7px 16px;border-radius:30px;
+    font-family:'Zen Antique',serif;
+    font-size:14px;letter-spacing:.08em;
+    backdrop-filter:blur(2px);
+  }
+  .auction-panel .headline{
+    font-size:clamp(30px,7.2vw,48px);
+    font-weight:900;line-height:1.3;
+    margin:4px 0 18px;
+    letter-spacing:.01em;
+    text-shadow:0 3px 14px rgba(0,0,0,.28);
+  }
+  .auction-panel .rule{
+    width:54px;height:4px;border-radius:3px;
+    background:rgba(255,255,255,.55);
+    margin:20px 0 16px;
+  }
+  .auction-panel .reason-label{
+    font-family:'Zen Antique',serif;
+    font-size:12px;letter-spacing:.18em;
+    opacity:.8;margin-bottom:6px;
+  }
+  .auction-panel .reason{
+    font-size:clamp(15px,3.4vw,18px);
+    line-height:1.72;
+    background:rgba(0,0,0,.16);
+    padding:14px 16px;border-radius:12px;
+  }
+  .auction-panel .panel-foot{
+    margin-top:auto;padding-top:20px;
+    display:flex;justify-content:space-between;align-items:flex-end;
+    font-size:12px;opacity:.78;
+    font-family:'Zen Antique',serif;
+  }
+  .auction-panel .lot-no{
+    font-family:'DM Serif Display',serif;font-style:italic;
+    font-size:22px;opacity:.9;
+  }
+  .auction-panel::before{
+    content:"";position:absolute;inset:9px;
+    border:1.5px solid rgba(255,255,255,.22);
+    border-radius:13px;pointer-events:none;
+  }
+  .empty-note{
+    text-align:center;color:var(--ink-soft);
+    padding:50px 20px;font-size:14px;
+    border:2px dashed var(--line);border-radius:14px;
+  }
+
+  /* ---------- saved list ---------- */
+  .saved-head{
+    display:flex;justify-content:space-between;align-items:baseline;
+    margin:34px 0 12px;border-bottom:2px solid var(--line);padding-bottom:6px;
+  }
+  .saved-head h3{font-family:'Zen Antique',serif;font-size:16px;}
+  .saved-head .cnt{font-size:13px;color:var(--ink-soft);}
+  .card-list{display:flex;flex-direction:column;gap:11px;}
+  .mini-card{
+    display:flex;align-items:stretch;gap:0;
+    border:2px solid var(--line);border-radius:12px;
+    background:#fbf4e4;overflow:hidden;
+  }
+  .mini-tab{
+    width:14px;flex:0 0 14px;
+  }
+  .mini-tab.big{background:var(--big);}
+  .mini-tab.small{background:var(--small);}
+  .mini-body{flex:1;padding:12px 14px;min-width:0;}
+  .mini-body .mini-verdict{
+    font-size:11px;font-family:'Zen Antique',serif;
+    letter-spacing:.1em;
+  }
+  .mini-body .mini-verdict.big{color:var(--big);}
+  .mini-body .mini-verdict.small{color:var(--small);}
+  .mini-body .mini-headline{
+    font-weight:700;font-size:15px;margin:3px 0;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .mini-body .mini-reason{
+    font-size:12px;color:var(--ink-soft);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .mini-actions{
+    display:flex;flex-direction:column;border-left:1px solid var(--line);
+  }
+  .mini-actions button{
+    flex:1;border:none;background:transparent;
+    padding:0 16px;font-size:18px;cursor:pointer;color:var(--ink-soft);
+  }
+  .mini-actions button:active{background:rgba(0,0,0,.06);}
+  .mini-actions button.present{background:var(--ink);color:var(--paper);font-size:14px;font-weight:700;padding:0 18px;}
+  .mini-actions button:not(:last-child){border-bottom:1px solid var(--line);}
+
+  /* ---------- present mode ---------- */
+  #presentMode{
+    position:fixed;inset:0;z-index:90;
+    background:#15100c;
+    display:none;flex-direction:column;
+    padding:env(safe-area-inset-top) 0 0;
+  }
+  #presentMode.on{display:flex;}
+  .present-stage{
+    flex:1;display:flex;align-items:center;justify-content:center;
+    padding:32px;
+  }
+  .present-stage .auction-panel{
+    width:100%;max-width:760px;
+    min-height:min(74vh,560px);
+    padding:48px 46px 40px;
+  }
+  .present-bar{
+    display:flex;gap:10px;padding:14px 20px calc(14px + env(safe-area-inset-bottom));
+    background:#0c0907;
+    align-items:center;
+  }
+  .present-bar button{
+    font-family:'Zen Kaku Gothic New',sans-serif;
+    border:1.5px solid #4a3d2e;background:#221a12;color:#f4ead7;
+    border-radius:10px;padding:13px 16px;font-size:15px;font-weight:700;
+    cursor:pointer;
+  }
+  .present-bar button:active{background:#33271a;}
+  .present-bar .nav{flex:0 0 auto;min-width:64px;}
+  .present-bar .pos{
+    flex:1;text-align:center;color:#c9b58e;
+    font-family:'Zen Antique',serif;font-size:14px;letter-spacing:.06em;
+  }
+  .present-bar .exit{background:var(--crust);border-color:var(--crust-deep);color:#fff;}
+
+  /* footer */
+  .foot-note{
+    text-align:center;font-size:11.5px;color:var(--ink-soft);
+    margin-top:46px;line-height:1.7;
+  }
+  .foot-note .sep{color:var(--line);margin:0 8px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="stamp">Y浜栄高校<br>売店<br>調査</div>
+    <div class="kicker">データサイエンス単元</div>
+    <h1 class="title">比較軸<em>オークション</em></h1>
+    <div class="subtitle">あなたの「比べ方」をパネルに仕立てよう</div>
+  </header>
+
+  <!-- ============ SCREEN 1 : INPUT ============ -->
+  <section class="screen active" id="screenInput">
+    <span class="section-tag">STEP ── 比較軸をつくる</span>
+
+    <div class="field-label"><span class="num">1</span>この比較軸は、1,248個をどう見せる？</div>
+    <div class="choice-grid">
+      <div class="choice" data-v="big" onclick="pickVerdict('big')">
+        <span class="check">✔</span>
+        <div class="ico">📈</div>
+        <div class="c-title">大きく見せる</div>
+        <div class="c-sub">「1,248個は <b>多い</b>」と<br>言うための比較軸</div>
+      </div>
+      <div class="choice" data-v="small" onclick="pickVerdict('small')">
+        <span class="check">✔</span>
+        <div class="ico">📉</div>
+        <div class="c-title">小さく見せる</div>
+        <div class="c-sub">「1,248個は <b>少ない</b>」と<br>言うための比較軸</div>
+      </div>
+    </div>
+
+    <div class="field-label"><span class="num">2</span>見出し ── 何と比べる？</div>
+    <div class="hint">新聞記者になったつもりで。「〇〇と比べれば、〜だ」のように短く言い切ると刺さる。</div>
+    <input type="text" id="inHeadline" maxlength="44" placeholder="例：去年の同じ月より65個も多い"
+           oninput="updateHeadlineCounter()">
+    <div class="counter"><span id="hlCount">0</span> / 44</div>
+
+    <div class="field-label"><span class="num">3</span>根拠 ── なぜその相手と比べた？</div>
+    <div class="hint">どんな数字・事実をもとに、なぜその比較が「フェア」だと思うのか。比べなかったものにも触れられたら強い。</div>
+    <textarea id="inReason" rows="4" maxlength="200"
+      placeholder="例：去年4月は1,183個。授業日数も全校生徒数もほぼ同じだから、条件をそろえた比較になる。だから「増えた」と言える。"
+      oninput="updateReasonCounter()"></textarea>
+    <div class="counter"><span id="rsCount">0</span> / 200</div>
+
+    <div class="btn-row">
+      <button class="act btn-ghost" id="btnPreview" onclick="goPreview()" disabled>パネルを見る →</button>
+    </div>
+
+    <div id="savedSection" style="display:none">
+      <div class="saved-head">
+        <h3>つくったパネル</h3>
+        <span class="cnt"><span id="savedCount">0</span> 枚</span>
+      </div>
+      <div class="card-list" id="cardList"></div>
+      <div class="btn-row">
+        <button class="act btn-dark" onclick="startPresent(0)">🎬 プレゼンモードで全部見せる</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN 2 : PREVIEW ============ -->
+  <section class="screen" id="screenPreview">
+    <span class="section-tag">PANEL ── できあがり</span>
+    <div class="preview-area">
+      <div class="auction-panel" id="previewPanel"></div>
+    </div>
+    <div class="btn-row">
+      <button class="act btn-ghost" onclick="backToInput()">← 直す</button>
+      <button class="act btn-primary" onclick="savePanel()">このパネルを保存 ✔</button>
+    </div>
+    <div class="hint" style="margin-top:18px">
+      保存すると下に並びます。複数の比較軸をつくったら「プレゼンモード」で1枚ずつ大映しにできます。
+    </div>
+  </section>
+
+  <div class="foot-note">
+    比較軸を選ぶとは、<b>何と比べないか</b>を決めること。
+    <span class="sep">|</span>
+    数字は何を語り、何を語らないのか？
+  </div>
+
+</div>
+
+<!-- ============ PRESENT MODE ============ -->
+<div id="presentMode">
+  <div class="present-stage">
+    <div class="auction-panel" id="presentPanel"></div>
+  </div>
+  <div class="present-bar">
+    <button class="nav" onclick="presentNav(-1)">‹</button>
+    <div class="pos" id="presentPos">1 / 1</div>
+    <button class="nav" onclick="presentNav(1)">›</button>
+    <button class="exit" onclick="exitPresent()">閉じる</button>
+  </div>
+</div>
+
+<script>
+/* ---------------- state ---------------- */
+var verdict = null;          // 'big' | 'small'
+var panels = [];             // saved panels
+var editIndex = -1;          // -1 = new, else editing
+var presentIdx = 0;
+
+var VERDICT_INFO = {
+  big:   { label:"多い",   tag:"これは多い",   verb:"大きく見せる" },
+  small: { label:"少ない", tag:"これは少ない", verb:"小さく見せる" }
+};
+
+/* ---------------- input handlers ---------------- */
+function pickVerdict(v){
+  verdict = v;
+  document.querySelectorAll('.choice').forEach(function(c){
+    c.classList.toggle('sel', c.dataset.v === v);
+  });
+  refreshPreviewBtn();
+}
+function updateHeadlineCounter(){
+  document.getElementById('hlCount').textContent =
+    document.getElementById('inHeadline').value.length;
+  refreshPreviewBtn();
+}
+function updateReasonCounter(){
+  document.getElementById('rsCount').textContent =
+    document.getElementById('inReason').value.length;
+  refreshPreviewBtn();
+}
+function refreshPreviewBtn(){
+  var ok = verdict &&
+    document.getElementById('inHeadline').value.trim().length > 0 &&
+    document.getElementById('inReason').value.trim().length > 0;
+  document.getElementById('btnPreview').disabled = !ok;
+}
+
+/* ---------------- screen switch ---------------- */
+function show(id){
+  document.querySelectorAll('.screen').forEach(function(s){
+    s.classList.remove('active');
+  });
+  document.getElementById(id).classList.add('active');
+  /* お題カードは入力画面では出さない */
+  document.getElementById('questionCard').style.display =
+    (id === 'screenInput') ? 'none' : 'block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ---------------- panel rendering ---------------- */
+function escapeHTML(s){
+  return s.replace(/[&<>"]/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
+  });
+}
+function panelHTML(data, lotNo){
+  var info = VERDICT_INFO[data.verdict];
+  var sign = data.verdict === 'big' ? '▲' : '▼';
+  return ''
+    + '<span class="verdict">'+sign+' 1,248個は ── 「'+info.label+'」</span>'
+    + '<div class="rule"></div>'
+    + '<div class="headline">'+escapeHTML(data.headline)+'</div>'
+    + '<div class="reason-label">── 比べた根拠</div>'
+    + '<div class="reason">'+escapeHTML(data.reason)+'</div>'
+    + '<div class="panel-foot">'
+      + '<span>比較軸オークション / 売店のパン</span>'
+      + '<span class="lot-no">LOT '+(lotNo||'—')+'</span>'
+    + '</div>';
+}
+
+function goPreview(){
+  var data = {
+    verdict: verdict,
+    headline: document.getElementById('inHeadline').value.trim(),
+    reason: document.getElementById('inReason').value.trim()
+  };
+  var panel = document.getElementById('previewPanel');
+  panel.className = 'auction-panel ' + data.verdict;
+  var lot = editIndex >= 0 ? (editIndex+1) : (panels.length+1);
+  panel.innerHTML = panelHTML(data, lot);
+  show('screenPreview');
+}
+
+function backToInput(){ show('screenInput'); }
+
+function savePanel(){
+  var data = {
+    verdict: verdict,
+    headline: document.getElementById('inHeadline').value.trim(),
+    reason: document.getElementById('inReason').value.trim()
+  };
+  if(editIndex >= 0){
+    panels[editIndex] = data;
+    editIndex = -1;
+  }else{
+    panels.push(data);
+  }
+  resetForm();
+  renderList();
+  show('screenInput');
+}
+
+function resetForm(){
+  verdict = null;
+  editIndex = -1;
+  document.querySelectorAll('.choice').forEach(function(c){c.classList.remove('sel');});
+  document.getElementById('inHeadline').value = '';
+  document.getElementById('inReason').value = '';
+  updateHeadlineCounter();
+  updateReasonCounter();
+}
+
+/* ---------------- saved list ---------------- */
+function renderList(){
+  var sec = document.getElementById('savedSection');
+  var list = document.getElementById('cardList');
+  if(panels.length === 0){
+    sec.style.display = 'none';
+    return;
+  }
+  sec.style.display = 'block';
+  document.getElementById('savedCount').textContent = panels.length;
+  list.innerHTML = '';
+  panels.forEach(function(p,i){
+    var info = VERDICT_INFO[p.verdict];
+    var card = document.createElement('div');
+    card.className = 'mini-card';
+    card.innerHTML = ''
+      + '<div class="mini-tab '+p.verdict+'"></div>'
+      + '<div class="mini-body">'
+        + '<div class="mini-verdict '+p.verdict+'">LOT '+(i+1)+' ・ '+info.verb+'</div>'
+        + '<div class="mini-headline">'+escapeHTML(p.headline)+'</div>'
+        + '<div class="mini-reason">'+escapeHTML(p.reason)+'</div>'
+      + '</div>'
+      + '<div class="mini-actions">'
+        + '<button title="編集" onclick="editPanel('+i+')">✎</button>'
+        + '<button title="削除" onclick="deletePanel('+i+')">🗑</button>'
+        + '<button class="present" onclick="startPresent('+i+')">映す</button>'
+      + '</div>';
+    list.appendChild(card);
+  });
+}
+
+function editPanel(i){
+  var p = panels[i];
+  editIndex = i;
+  pickVerdict(p.verdict);
+  document.getElementById('inHeadline').value = p.headline;
+  document.getElementById('inReason').value = p.reason;
+  updateHeadlineCounter();
+  updateReasonCounter();
+  goPreview();
+}
+
+function deletePanel(i){
+  if(!confirm('LOT '+(i+1)+' のパネルを削除しますか？')) return;
+  panels.splice(i,1);
+  renderList();
+}
+
+/* ---------------- present mode ---------------- */
+function startPresent(i){
+  if(panels.length === 0) return;
+  presentIdx = i;
+  renderPresent();
+  document.getElementById('presentMode').classList.add('on');
+}
+function renderPresent(){
+  var p = panels[presentIdx];
+  var panel = document.getElementById('presentPanel');
+  panel.className = 'auction-panel ' + p.verdict;
+  panel.innerHTML = panelHTML(p, presentIdx+1);
+  document.getElementById('presentPos').textContent =
+    (presentIdx+1) + ' / ' + panels.length;
+}
+function presentNav(d){
+  presentIdx = (presentIdx + d + panels.length) % panels.length;
+  renderPresent();
+}
+function exitPresent(){
+  document.getElementById('presentMode').classList.remove('on');
+}
+
+/* keyboard support (for projector + bluetooth clicker) */
+document.addEventListener('keydown',function(e){
+  if(!document.getElementById('presentMode').classList.contains('on')) return;
+  if(e.key==='ArrowRight'||e.key==='PageDown') presentNav(1);
+  if(e.key==='ArrowLeft'||e.key==='PageUp') presentNav(-1);
+  if(e.key==='Escape') exitPresent();
+});
+
+/* 初期画面は入力画面なのでお題カードは隠しておく */
+document.getElementById('questionCard').style.display = 'none';
+</script>
+</body>
+</html>
