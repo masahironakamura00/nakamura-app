@@ -1,1 +1,1 @@
-# A-simple-card-displaying-app
+# 中村がアプリを作成
