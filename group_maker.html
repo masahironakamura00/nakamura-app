@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ランダム班編成アプリ</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+    color: #333;
+  }
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    overflow: hidden;
+  }
+  header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 24px;
+    text-align: center;
+  }
+  header h1 { font-size: 1.6rem; margin-bottom: 4px; }
+  header p { font-size: 0.9rem; opacity: 0.9; }
+  .content { padding: 28px; }
+  .form-group { margin-bottom: 20px; }
+  label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #444;
+    font-size: 0.95rem;
+  }
+  input[type="number"], input[type="text"] {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+  }
+  input:focus { outline: none; border-color: #667eea; }
+  .hint {
+    font-size: 0.8rem;
+    color: #888;
+    margin-top: 4px;
+  }
+  .absent-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+    min-height: 20px;
+  }
+  .number-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+    gap: 6px;
+    margin-top: 10px;
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 8px;
+    background: #f7f7f7;
+    border-radius: 8px;
+  }
+  .num-btn {
+    padding: 10px 0;
+    border: 2px solid #ddd;
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: bold;
+    transition: all 0.15s;
+  }
+  .num-btn:hover { border-color: #667eea; }
+  .num-btn.absent {
+    background: #ff6b6b;
+    color: white;
+    border-color: #ff6b6b;
+    text-decoration: line-through;
+  }
+  .btn-primary {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.05rem;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: transform 0.15s;
+  }
+  .btn-primary:hover { transform: translateY(-2px); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-secondary {
+    padding: 8px 16px;
+    background: #f0f0f0;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    margin-right: 6px;
+  }
+  .btn-secondary:hover { background: #e0e0e0; }
+  .result {
+    margin-top: 28px;
+    padding-top: 24px;
+    border-top: 2px dashed #e0e0e0;
+  }
+  .result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .result-header h2 { color: #555; font-size: 1.2rem; }
+  .groups {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px;
+  }
+  .group-card {
+    background: #f7f9fc;
+    border: 2px solid #e0e8f0;
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .group-card h3 {
+    color: #667eea;
+    margin-bottom: 10px;
+    font-size: 1rem;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 6px;
+  }
+  .members {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .member {
+    background: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: bold;
+    color: #555;
+    border: 1px solid #ddd;
+    font-size: 0.9rem;
+  }
+  .error {
+    background: #ffe0e0;
+    color: #c00;
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 10px;
+    font-size: 0.9rem;
+  }
+  .summary {
+    background: #eef;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: #555;
+    margin-bottom: 14px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🎲 ランダム班編成アプリ</h1>
+    <p>参加者をランダムに班分けします</p>
+  </header>
+  <div class="content">
+    <div class="form-group">
+      <label for="totalCount">👥 参加人数（最大40人）</label>
+      <input type="number" id="totalCount" min="1" max="40" value="30">
+      <div class="hint">1〜40の範囲で入力してください</div>
+    </div>
+
+    <div class="form-group">
+      <label>🚫 欠席者（番号をタップして選択）</label>
+      <div class="hint">欠席者の番号をタップすると赤くなります</div>
+      <div class="number-grid" id="numberGrid"></div>
+      <div style="margin-top: 10px;">
+        <button class="btn-secondary" onclick="clearAbsent()">選択をクリア</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="groupSize">👫 1班あたりの人数</label>
+      <input type="number" id="groupSize" min="1" max="40" value="4">
+      <div class="hint">割り切れない場合は、余った人を既存の班に分配します</div>
+    </div>
+
+    <button class="btn-primary" onclick="makeGroups()">🎲 班をランダムに編成する</button>
+
+    <div id="errorMsg"></div>
+
+    <div class="result" id="result" style="display:none;">
+      <div class="result-header">
+        <h2>📋 編成結果</h2>
+        <button class="btn-secondary" onclick="makeGroups()">🔄 再抽選</button>
+      </div>
+      <div class="summary" id="summary"></div>
+      <div class="groups" id="groups"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let absentSet = new Set();
+
+  function renderNumberGrid() {
+    const total = parseInt(document.getElementById('totalCount').value) || 0;
+    const grid = document.getElementById('numberGrid');
+    grid.innerHTML = '';
+    if (total < 1 || total > 40) return;
+    for (let i = 1; i <= total; i++) {
+      const btn = document.createElement('button');
+      btn.className = 'num-btn' + (absentSet.has(i) ? ' absent' : '');
+      btn.textContent = i;
+      btn.onclick = () => toggleAbsent(i);
+      grid.appendChild(btn);
+    }
+  }
+
+  function toggleAbsent(num) {
+    if (absentSet.has(num)) absentSet.delete(num);
+    else absentSet.add(num);
+    renderNumberGrid();
+  }
+
+  function clearAbsent() {
+    absentSet.clear();
+    renderNumberGrid();
+  }
+
+  function showError(msg) {
+    document.getElementById('errorMsg').innerHTML = `<div class="error">⚠️ ${msg}</div>`;
+  }
+
+  function clearError() {
+    document.getElementById('errorMsg').innerHTML = '';
+  }
+
+  function makeGroups() {
+    clearError();
+    const total = parseInt(document.getElementById('totalCount').value);
+    const groupSize = parseInt(document.getElementById('groupSize').value);
+
+    if (!total || total < 1 || total > 40) {
+      showError('参加人数は1〜40の範囲で入力してください');
+      return;
+    }
+    if (!groupSize || groupSize < 1) {
+      showError('1班あたりの人数は1以上で入力してください');
+      return;
+    }
+
+    // 出席者リストを作成
+    const participants = [];
+    for (let i = 1; i <= total; i++) {
+      if (!absentSet.has(i)) participants.push(i);
+    }
+
+    if (participants.length === 0) {
+      showError('出席者がいません');
+      return;
+    }
+    if (groupSize > participants.length) {
+      showError('1班の人数が出席者数を超えています');
+      return;
+    }
+
+    // シャッフル（Fisher-Yates）
+    const shuffled = [...participants];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
+    // 班数を決める（指定人数でなるべく均等に分ける）
+    const numGroups = Math.floor(shuffled.length / groupSize);
+    // 班数が0にならないよう調整
+    const actualNumGroups = numGroups === 0 ? 1 : numGroups;
+
+    // 空の班を用意
+    const groups = Array.from({ length: actualNumGroups }, () => []);
+    // 順番に配って余りを分配（どの班も groupSize または groupSize+1 人になる）
+    shuffled.forEach((p, idx) => {
+      groups[idx % actualNumGroups].push(p);
+    });
+
+    renderResult(groups, participants.length, total);
+  }
+
+  function renderResult(groups, presentCount, total) {
+    const resultDiv = document.getElementById('result');
+    const groupsDiv = document.getElementById('groups');
+    const summary = document.getElementById('summary');
+
+    resultDiv.style.display = 'block';
+    summary.innerHTML = `参加人数 ${total}人 / 出席 ${presentCount}人 / 欠席 ${absentSet.size}人 → <strong>${groups.length}班</strong>に編成`;
+
+    groupsDiv.innerHTML = '';
+    groups.forEach((members, idx) => {
+      const card = document.createElement('div');
+      card.className = 'group-card';
+      // 各班のメンバーは番号順に表示（見やすさ優先）
+      const sortedMembers = [...members].sort((a, b) => a - b);
+      card.innerHTML = `
+        <h3>第${idx + 1}班 (${members.length}人)</h3>
+        <div class="members">
+          ${sortedMembers.map(m => `<span class="member">${m}</span>`).join('')}
+        </div>
+      `;
+      groupsDiv.appendChild(card);
+    });
+
+    // 結果までスクロール
+    resultDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // 参加人数変更時に番号ボタンを再描画
+  document.getElementById('totalCount').addEventListener('input', () => {
+    const total = parseInt(document.getElementById('totalCount').value) || 0;
+    // 範囲外の欠席者は削除
+    [...absentSet].forEach(n => { if (n > total) absentSet.delete(n); });
+    renderNumberGrid();
+  });
+
+  // 初期描画
+  renderNumberGrid();
+</script>
+</body>
+</html>
