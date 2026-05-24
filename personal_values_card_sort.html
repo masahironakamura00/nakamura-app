@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>価値観カード — 自分が大切にしているものを言葉にする</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Gradient pop palette */
+    --bg-1: #fef3c7;
+    --bg-2: #fce7f3;
+    --bg-3: #e0e7ff;
+    --bg-4: #d1fae5;
+
+    --pink:    #ec4899;
+    --pink-d:  #be185d;
+    --purple:  #a855f7;
+    --purple-d:#7c3aed;
+    --blue:    #3b82f6;
+    --blue-d:  #1d4ed8;
+    --teal:    #14b8a6;
+    --teal-d:  #0f766e;
+    --amber:   #f59e0b;
+    --amber-d: #b45309;
+    --red:     #ef4444;
+    --red-d:   #b91c1c;
+
+    --ink:     #1e293b;
+    --ink-2:   #475569;
+    --muted:   #94a3b8;
+    --line:    #e5e7eb;
+
+    --paper:   #ffffff;
+    --paper-2: #fafaff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    font-family: 'M PLUS Rounded 1c', 'Hiragino Maru Gothic ProN', 'Hiragino Sans', sans-serif;
+    color: var(--ink);
+    min-height: 100vh;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    font-weight: 500;
+  }
+
+  body {
+    background:
+      radial-gradient(circle at 15% 10%, rgba(236, 72, 153, 0.18), transparent 40%),
+      radial-gradient(circle at 85% 80%, rgba(59, 130, 246, 0.18), transparent 45%),
+      radial-gradient(circle at 80% 20%, rgba(245, 158, 11, 0.15), transparent 40%),
+      radial-gradient(circle at 20% 75%, rgba(20, 184, 166, 0.15), transparent 45%),
+      linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 50%, var(--bg-3) 100%);
+    background-attachment: fixed;
+    background-size: cover;
+  }
+
+  /* 全体コンテナ */
+  .container { max-width: 1000px; margin: 0 auto; padding: 16px; }
+
+  /* ヘッダー */
+  .app-header {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.8);
+    padding: 14px 0;
+    margin-bottom: 24px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    box-shadow: 0 4px 24px rgba(168, 85, 247, 0.08);
+  }
+  .app-header-inner {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .app-title {
+    font-size: 1.25rem;
+    font-weight: 900;
+    color: var(--ink);
+    margin: 0;
+    letter-spacing: 0.02em;
+    background: linear-gradient(135deg, var(--pink), var(--purple));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .app-subtitle {
+    font-size: 0.78rem;
+    color: var(--ink-2);
+    margin-top: 2px;
+    font-weight: 500;
+  }
+
+  /* ステップインジケーター */
+  .step-indicator {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    font-size: 0.85rem;
+    color: var(--ink-2);
+    font-weight: 700;
+  }
+  .step-dot {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #fff;
+    color: var(--muted);
+    border: 3px solid var(--line);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.85rem;
+    transition: all 0.25s ease;
+  }
+  .step-dot.active {
+    background: linear-gradient(135deg, var(--pink), var(--purple));
+    color: #fff;
+    border-color: #fff;
+    transform: scale(1.15);
+    box-shadow: 0 6px 16px rgba(168, 85, 247, 0.4);
+  }
+  .step-dot.done {
+    background: linear-gradient(135deg, var(--teal), var(--blue));
+    color: #fff;
+    border-color: #fff;
+    box-shadow: 0 3px 8px rgba(20, 184, 166, 0.3);
+  }
+  .step-label {
+    margin-left: 6px;
+    font-weight: 800;
+    color: var(--ink);
+  }
+
+  /* ペーパーボックス */
+  .card-box {
+    background: var(--paper);
+    border-radius: 24px;
+    padding: 28px;
+    box-shadow:
+      0 20px 50px rgba(168, 85, 247, 0.08),
+      0 4px 12px rgba(0,0,0,0.04);
+    margin-bottom: 20px;
+    border: 1px solid rgba(255,255,255,0.8);
+    animation: floatIn 0.4s ease;
+  }
+  @keyframes floatIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .card-box h2 {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--ink);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-box h2 .h2-deco {
+    display: inline-block;
+    width: 6px;
+    height: 28px;
+    background: linear-gradient(180deg, var(--pink), var(--purple));
+    border-radius: 4px;
+  }
+  .card-box h3 {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--ink);
+    margin-bottom: 10px;
+  }
+  .card-box p { margin-bottom: 12px; color: var(--ink-2); }
+  .card-box p:last-child { margin-bottom: 0; }
+  .card-box strong { color: var(--ink); font-weight: 800; }
+
+  /* 約束ボックス */
+  .promise-box {
+    background: linear-gradient(135deg, #fff7ed 0%, #fef3c7 50%, #fce7f3 100%);
+    border: 2px dashed var(--amber);
+    padding: 18px 22px;
+    border-radius: 18px;
+    margin-bottom: 20px;
+    position: relative;
+    font-size: 0.98rem;
+  }
+  .promise-box::before {
+    content: '💌';
+    position: absolute;
+    top: -16px;
+    left: 20px;
+    font-size: 1.8rem;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+  }
+  .promise-box strong { color: var(--amber-d); }
+
+  /* フォーム */
+  .form-group { margin-bottom: 18px; }
+  .form-label {
+    display: block;
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .form-label .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    background: linear-gradient(135deg, var(--pink), var(--purple));
+    color: #fff;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    margin-left: 6px;
+    font-weight: 800;
+  }
+  .form-input, .form-textarea {
+    width: 100%;
+    padding: 14px 18px;
+    border: 2.5px solid var(--line);
+    border-radius: 14px;
+    font-size: 1rem;
+    font-family: inherit;
+    font-weight: 500;
+    background: var(--paper-2);
+    color: var(--ink);
+    transition: all 0.15s ease;
+  }
+  .form-input:focus, .form-textarea:focus {
+    outline: none;
+    border-color: var(--purple);
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.15);
+  }
+  .form-textarea { resize: vertical; min-height: 100px; line-height: 1.7; }
+
+  .helper-text {
+    font-size: 0.85rem;
+    color: var(--ink-2);
+    margin-top: 6px;
+    font-weight: 500;
+  }
+
+  /* ボタン */
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 24px;
+    align-items: center;
+  }
+  .btn {
+    padding: 14px 32px;
+    border: none;
+    border-radius: 100px;
+    font-size: 1rem;
+    font-weight: 800;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s cubic-bezier(.34,1.56,.64,1);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: 0.02em;
+    user-select: none;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--pink), var(--purple));
+    color: #fff;
+    box-shadow:
+      0 4px 0 var(--purple-d),
+      0 10px 24px rgba(168, 85, 247, 0.35);
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 6px 0 var(--purple-d),
+      0 14px 28px rgba(168, 85, 247, 0.45);
+  }
+  .btn-primary:active {
+    transform: translateY(2px);
+    box-shadow:
+      0 2px 0 var(--purple-d),
+      0 4px 12px rgba(168, 85, 247, 0.3);
+  }
+  .btn-primary:disabled {
+    background: #e5e7eb;
+    color: #9ca3af;
+    box-shadow: 0 4px 0 #d1d5db;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .btn-secondary {
+    background: #fff;
+    color: var(--purple-d);
+    border: 2.5px solid var(--line);
+    box-shadow: 0 3px 0 var(--line);
+  }
+  .btn-secondary:hover {
+    border-color: var(--purple);
+    color: var(--purple);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 0 #ddd6fe;
+  }
+  .btn-secondary:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 0 var(--line);
+  }
+  .btn-danger {
+    background: #fff;
+    color: var(--red);
+    border: 2.5px solid var(--line);
+    box-shadow: 0 3px 0 var(--line);
+  }
+  .btn-danger:hover {
+    border-color: var(--red);
+    box-shadow: 0 5px 0 #fecaca;
+    transform: translateY(-2px);
+  }
+  .btn-cta {
+    background: linear-gradient(135deg, var(--amber), var(--pink));
+    color: #fff;
+    box-shadow:
+      0 4px 0 #c2410c,
+      0 10px 24px rgba(245, 158, 11, 0.4);
+    font-size: 1.1rem;
+    padding: 16px 40px;
+  }
+  .btn-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 #c2410c, 0 14px 28px rgba(245, 158, 11, 0.5);
+  }
+
+  /* 73枚カードグリッド */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
+    gap: 12px;
+    margin-top: 18px;
+  }
+  .value-card {
+    background: var(--vc-bg, #fff);
+    border: 3px solid var(--vc-border, #ccc);
+    border-radius: 18px;
+    padding: 18px 8px;
+    text-align: center;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--vc-text, var(--ink));
+    cursor: pointer;
+    transition: all 0.18s cubic-bezier(.34,1.56,.64,1);
+    position: relative;
+    user-select: none;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    word-break: keep-all;
+    box-shadow: 0 4px 0 var(--vc-border, #ccc);
+    letter-spacing: 0.02em;
+  }
+  .value-card:hover {
+    transform: translateY(-3px) rotate(-1.5deg);
+    box-shadow: 0 7px 0 var(--vc-border, #ccc), 0 12px 20px rgba(0,0,0,0.08);
+  }
+  .value-card:active {
+    transform: translateY(1px) rotate(0);
+    box-shadow: 0 2px 0 var(--vc-border, #ccc);
+  }
+  .value-card.selected {
+    transform: scale(1.06) rotate(-2.5deg);
+    box-shadow:
+      0 0 0 4px #fff,
+      0 0 0 8px var(--vc-border, var(--purple)),
+      0 8px 24px rgba(0,0,0,0.18);
+    border-color: #fff;
+    z-index: 2;
+  }
+  .value-card.selected::after {
+    content: '✓';
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, var(--pink), var(--purple));
+    color: #fff;
+    border-radius: 50%;
+    font-size: 1rem;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 8px rgba(168, 85, 247, 0.4);
+    border: 2.5px solid #fff;
+  }
+
+  /* 10 色パステル */
+  .cc-0 { --vc-bg: #FFD3B6; --vc-border: #FB923C; --vc-text: #7C2D12; }
+  .cc-1 { --vc-bg: #FDFD96; --vc-border: #EAB308; --vc-text: #713F12; }
+  .cc-2 { --vc-bg: #C5F0CD; --vc-border: #22C55E; --vc-text: #14532D; }
+  .cc-3 { --vc-bg: #BFE0FA; --vc-border: #3B82F6; --vc-text: #1E3A8A; }
+  .cc-4 { --vc-bg: #DCD0FF; --vc-border: #A855F7; --vc-text: #581C87; }
+  .cc-5 { --vc-bg: #FFC8DD; --vc-border: #EC4899; --vc-text: #831843; }
+  .cc-6 { --vc-bg: #FFB7B2; --vc-border: #F87171; --vc-text: #7F1D1D; }
+  .cc-7 { --vc-bg: #C7CEEA; --vc-border: #6366F1; --vc-text: #312E81; }
+  .cc-8 { --vc-bg: #B5EAD7; --vc-border: #10B981; --vc-text: #064E3B; }
+  .cc-9 { --vc-bg: #FFE6A7; --vc-border: #F59E0B; --vc-text: #78350F; }
+
+  /* ロール表示 */
+  .value-card.role-top1, .value-card.role-top2, .value-card.role-top3, .value-card.role-mayotta {
+    transform: scale(1.05) rotate(-2deg);
+    border-color: #fff;
+  }
+  .value-card.role-top1 { --vc-bg: linear-gradient(135deg, #fef3c7, #fde68a); --vc-border: var(--amber); --vc-text: #78350F; box-shadow: 0 0 0 4px #fff, 0 0 0 8px var(--amber), 0 8px 20px rgba(245,158,11,0.35); }
+  .value-card.role-top2 { --vc-bg: linear-gradient(135deg, #f1f5f9, #cbd5e1); --vc-border: #64748b; --vc-text: #1e293b; box-shadow: 0 0 0 4px #fff, 0 0 0 8px #64748b, 0 8px 20px rgba(100,116,139,0.35); }
+  .value-card.role-top3 { --vc-bg: linear-gradient(135deg, #fed7aa, #fdba74); --vc-border: #c2410c; --vc-text: #7c2d12; box-shadow: 0 0 0 4px #fff, 0 0 0 8px #c2410c, 0 8px 20px rgba(194,65,12,0.35); }
+  .value-card.role-mayotta { --vc-bg: linear-gradient(135deg, #fce7f3, #fbcfe8); --vc-border: var(--pink); --vc-text: #831843; border-style: dashed; box-shadow: 0 0 0 4px #fff, 0 0 0 8px var(--pink), 0 8px 20px rgba(236,72,153,0.35); }
+  .role-badge {
+    position: absolute;
+    top: -14px;
+    left: -10px;
+    font-size: 1.8rem;
+    line-height: 1;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    z-index: 3;
+  }
+
+  /* ロールスロット */
+  .role-selector {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: linear-gradient(135deg, #fdf4ff, #f0f9ff);
+    border-radius: 18px;
+    border: 2px dashed rgba(168, 85, 247, 0.3);
+  }
+  .role-slot {
+    padding: 14px 12px;
+    background: #fff;
+    border: 3px solid var(--line);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(.34,1.56,.64,1);
+    text-align: center;
+    position: relative;
+    user-select: none;
+  }
+  .role-slot:hover { border-color: var(--purple); }
+  .role-slot.active {
+    border-color: var(--purple);
+    background: linear-gradient(135deg, #fdf4ff, #fce7f3);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 #e9d5ff;
+  }
+  .role-slot.filled { background: linear-gradient(135deg, #ecfdf5, #f0fdf4); border-color: var(--teal); }
+  .role-slot .role-icon { font-size: 1.5rem; margin-bottom: 4px; display: block; }
+  .role-slot .role-name { font-size: 0.75rem; color: var(--ink-2); font-weight: 700; margin-bottom: 2px; }
+  .role-slot .role-value { font-weight: 800; color: var(--ink); font-size: 1rem; }
+  .role-slot .role-value.empty { color: var(--muted); font-weight: 500; font-size: 0.85rem; }
+
+  /* セレクションカウンター */
+  .selection-counter {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(135deg, #fdf4ff, #f0f9ff);
+    padding: 16px 22px;
+    border-radius: 18px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+    border: 2px solid rgba(168, 85, 247, 0.15);
+  }
+  .counter-label { font-weight: 700; color: var(--ink-2); font-size: 0.95rem; }
+  .counter-num {
+    font-size: 2rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--pink), var(--purple));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
+    min-width: 1.5em;
+    text-align: center;
+    line-height: 1;
+  }
+
+  /* 揺り戻し */
+  .yurimoshi-box {
+    background: linear-gradient(135deg, #fff7ed, #fef3c7);
+    border: 2px dashed var(--amber);
+    padding: 18px 22px;
+    border-radius: 18px;
+    margin-bottom: 18px;
+    position: relative;
+  }
+  .yurimoshi-box::before {
+    content: '💭';
+    position: absolute;
+    top: -18px;
+    left: 18px;
+    font-size: 1.9rem;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+  }
+  .yurimoshi-box strong { color: var(--amber-d); }
+
+  /* 結果ページ */
+  .result-section {
+    margin-bottom: 28px;
+    padding-bottom: 24px;
+    border-bottom: 2px dashed var(--line);
+  }
+  .result-section:last-child { border-bottom: none; }
+  .result-section h3 {
+    font-size: 1.2rem;
+    font-weight: 900;
+    color: var(--ink);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .result-top-card {
+    border-radius: 18px;
+    padding: 18px 22px 18px 70px;
+    margin-bottom: 14px;
+    position: relative;
+    border: 3px solid;
+  }
+  .result-top-card::before {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    font-size: 2.6rem;
+    line-height: 1;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+  }
+  .result-top-card.t1 {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border-color: var(--amber);
+  }
+  .result-top-card.t1::before { content: '🥇'; }
+  .result-top-card.t2 {
+    background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+    border-color: #64748b;
+  }
+  .result-top-card.t2::before { content: '🥈'; }
+  .result-top-card.t3 {
+    background: linear-gradient(135deg, #fed7aa, #fdba74);
+    border-color: #c2410c;
+  }
+  .result-top-card.t3::before { content: '🥉'; }
+  .result-top-card.mayotta {
+    background: linear-gradient(135deg, #fce7f3, #fbcfe8);
+    border-color: var(--pink);
+    border-style: dashed;
+  }
+  .result-top-card.mayotta::before { content: '💭'; }
+  .result-top-label {
+    font-size: 0.75rem;
+    color: var(--ink-2);
+    margin-bottom: 4px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .result-top-name {
+    font-size: 1.45rem;
+    font-weight: 900;
+    color: var(--ink);
+    margin-bottom: 10px;
+    letter-spacing: 0.02em;
+  }
+  .result-top-reason {
+    font-size: 0.95rem;
+    color: var(--ink);
+    white-space: pre-wrap;
+    line-height: 1.8;
+    font-weight: 500;
+  }
+  .result-top-reason.empty { color: var(--muted); font-style: italic; }
+
+  .trajectory-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .trajectory-chip {
+    display: inline-block;
+    padding: 6px 14px;
+    background: #fff;
+    border: 2.5px solid var(--line);
+    border-radius: 18px;
+    font-size: 0.9rem;
+    color: var(--ink);
+    font-weight: 700;
+    box-shadow: 0 2px 0 var(--line);
+  }
+
+  .meta-info {
+    font-size: 0.9rem;
+    color: var(--ink-2);
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+  .meta-info strong { color: var(--ink); font-weight: 800; }
+
+  .result-title-row {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .result-title-row .crown { font-size: 3rem; line-height: 1; margin-bottom: 4px; animation: bounce 1.5s ease infinite; }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  .result-title-row h2 {
+    justify-content: center;
+    font-size: 1.8rem;
+  }
+  .result-title-row h2 .h2-deco { display: none; }
+
+  /* 紙吹雪 */
+  .confetti {
+    position: fixed;
+    top: -20px;
+    width: 10px;
+    height: 14px;
+    z-index: 100;
+    pointer-events: none;
+    animation: fall linear forwards;
+  }
+  @keyframes fall {
+    to { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* リストの調整 */
+  ol.steps-list, ul.steps-list {
+    padding-left: 0;
+    list-style: none;
+    margin-bottom: 18px;
+  }
+  ol.steps-list li {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    border-radius: 12px;
+    padding: 10px 16px;
+    margin-bottom: 8px;
+    border-left: 4px solid var(--purple);
+    font-weight: 600;
+    color: var(--ink-2);
+  }
+  ol.steps-list li strong { color: var(--ink); font-weight: 800; }
+
+  /* 印刷時 */
+  @media print {
+    body {
+      background: white !important;
+      color: black;
+    }
+    .app-header, .btn-row, .no-print { display: none !important; }
+    .container { padding: 0; max-width: none; }
+    .card-box { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; animation: none; }
+    .result-section { break-inside: avoid; }
+    .result-top-card { box-shadow: none; }
+    .result-title-row .crown { animation: none; }
+    a { color: black; text-decoration: none; }
+  }
+
+  /* スマホ */
+  @media (max-width: 600px) {
+    .container { padding: 12px; }
+    .card-box { padding: 20px; border-radius: 20px; }
+    .card-grid {
+      grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+      gap: 9px;
+    }
+    .value-card { font-size: 0.92rem; padding: 14px 4px; border-radius: 14px; }
+    .app-title { font-size: 1.05rem; }
+    .step-indicator { font-size: 0.75rem; }
+    .step-dot { width: 28px; height: 28px; font-size: 0.75rem; border-width: 2.5px; }
+    .step-label { display: none; }
+    .btn { padding: 12px 24px; font-size: 0.95rem; }
+    .btn-cta { padding: 14px 30px; font-size: 1rem; }
+    .card-box h2 { font-size: 1.3rem; }
+    .role-selector { grid-template-columns: repeat(2, 1fr); }
+    .result-top-card { padding-left: 64px; }
+    .result-top-card::before { font-size: 2.2rem; }
+    .result-top-name { font-size: 1.25rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-header no-print">
+  <div class="app-header-inner">
+    <div>
+      <div class="app-title">✨ 価値観カード</div>
+      <div class="app-subtitle">自分が大切にしているものを言葉にする</div>
+    </div>
+    <div class="step-indicator" id="step-indicator"></div>
+  </div>
+</div>
+
+<div id="app" class="container"></div>
+
+<script>
+'use strict';
+
+// ============================================================
+// データ
+// ============================================================
+const CARDS = [
+  '自由', '好奇心', '仲間', '表現', '公平さ', '冒険', '向上心', '主体性', '礼儀', '自立',
+  '安らぎ', '感性', '美しさ', '突破力', '犠牲', '安心', '挑戦', '感謝', '落ち着き', '自分らしさ',
+  '努力', '影響力', '繊細さ', '忠誠心', '学び', '自信', '静けさ', '責任', '洞察力', '愛嬌',
+  '謙虚さ', '正義', '安定', '規律', 'スピード', '忍耐', '好成績', '自律', '個性', '柔軟性',
+  '協力', '計画性', '誠実', 'ストイックさ', '思い切り', '冒険心', '多様性', '集中', '効率', '成長',
+  '情熱', '知識', 'ﾘｰﾀﾞｰｼｯﾌﾟ', '賢さ', '笑い', '貢献', '想像力', '準備', '持続力', '学校生活',
+  '本音', '癒し', '優しさ', '楽しさ', '直感', '笑顔', '家族', '楽観性', '信頼', '志',
+  'ｺﾐｭﾆｹｰｼｮﾝ', '創造力', '思いやり'
+];
+
+const STORAGE_KEY = 'value_cards_state_v1';
+
+const STATE = {
+  step: 0,
+  name: '',
+  classNo: '',
+  selectedCards: [],
+  top1: null,
+  top2: null,
+  top3: null,
+  mayotta: null,
+  reasons: { top1: '', top2: '', top3: '', mayotta: '' },
+  yurimoshi: '',
+  startedAt: null,
+  updatedAt: null,
+};
+
+// ============================================================
+// 永続化
+// ============================================================
+function save() {
+  STATE.updatedAt = new Date().toISOString();
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); }
+  catch (e) { console.warn('保存に失敗', e); }
+}
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) Object.assign(STATE, JSON.parse(raw));
+  } catch (e) { console.warn('読込に失敗', e); }
+}
+function reset() {
+  if (!confirm('入力内容をすべて消して最初からやり直します。よろしいですか？')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  Object.assign(STATE, {
+    step: 0, name: '', classNo: '',
+    selectedCards: [],
+    top1: null, top2: null, top3: null, mayotta: null,
+    reasons: { top1: '', top2: '', top3: '', mayotta: '' },
+    yurimoshi: '', startedAt: null, updatedAt: null,
+  });
+  render();
+}
+
+// カード名から色クラスを決定（決定的）
+function colorClass(name) {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = ((h * 31) + name.charCodeAt(i)) | 0;
+  return 'cc-' + (Math.abs(h) % 10);
+}
+
+// ============================================================
+// レンダリング
+// ============================================================
+function render() {
+  renderStepIndicator();
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+  switch (STATE.step) {
+    case 0: renderWelcome(app); break;
+    case 1: renderSelect(app); break;
+    case 2: renderRoles(app); break;
+    case 3: renderReasons(app); break;
+    case 4: renderYurimoshi(app); break;
+    case 5: renderResult(app); break;
+    default: STATE.step = 0; renderWelcome(app);
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderStepIndicator() {
+  const el = document.getElementById('step-indicator');
+  if (STATE.step === 0 || STATE.step === 5) { el.innerHTML = ''; return; }
+  const labels = ['', '選ぶ', '決める', '理由', '揺り戻し'];
+  const html = [1, 2, 3, 4].map(n => {
+    const cls = n < STATE.step ? 'done' : (n === STATE.step ? 'active' : '');
+    return `<span class="step-dot ${cls}">${n}</span>`;
+  }).join('');
+  el.innerHTML = html + `<span class="step-label">${labels[STATE.step]}</span>`;
+}
+
+// ============================================================
+// Step 0: ようこそ
+// ============================================================
+function renderWelcome(app) {
+  app.innerHTML = `
+    <div class="card-box">
+      <h2><span class="h2-deco"></span>はじめに</h2>
+      <div class="promise-box">
+        <strong>今年の約束</strong> ─ この授業では「<strong>迷うこと</strong>」を大事にします。<br>
+        整った答えより、揺らぎや引っかかりを残してください。
+      </div>
+      <p>これから、あなたが大切にしている価値観を言葉にしていきます。</p>
+      <ol class="steps-list">
+        <li>① <strong>73枚から「気になる」カードを選ぶ</strong>（10枚を目安に）</li>
+        <li>② <strong>TOP3 と「最後まで迷った1枚」を決める</strong></li>
+        <li>③ <strong>選んだ理由を書く</strong>（過去の経験を結びつけて）</li>
+        <li>④ （グループ共有のあとで）<strong>揺り戻しメモを追記</strong></li>
+        <li>⑤ <strong>結果を確認・提出</strong></li>
+      </ol>
+      <p>まずは名前を入れてください。</p>
+      <div class="form-group">
+        <label class="form-label" for="name-input">名前</label>
+        <input type="text" id="name-input" class="form-input" value="${escHtml(STATE.name)}" placeholder="例：佐藤 花子">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="class-input">クラス・出席番号<span class="badge">任意</span></label>
+        <input type="text" id="class-input" class="form-input" value="${escHtml(STATE.classNo)}" placeholder="例：1年1組1番">
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-cta" id="start-btn">はじめる ✨</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('name-input').addEventListener('input', e => { STATE.name = e.target.value; save(); });
+  document.getElementById('class-input').addEventListener('input', e => { STATE.classNo = e.target.value; save(); });
+  document.getElementById('start-btn').addEventListener('click', () => {
+    if (!STATE.name.trim()) { alert('名前を入れてください'); return; }
+    if (!STATE.startedAt) STATE.startedAt = new Date().toISOString();
+    STATE.step = 1; save(); render();
+  });
+}
+
+// ============================================================
+// Step 1: 73枚から「気になる」を選ぶ
+// ============================================================
+function renderSelect(app) {
+  const count = STATE.selectedCards.length;
+  app.innerHTML = `
+    <div class="card-box">
+      <h2><span class="h2-deco"></span>STEP 1：気になるカードを選ぶ 🎯</h2>
+      <p>引っかかったカードをタップしてください。<strong>10枚を目安</strong>に。多くても少なくても OK。考えすぎず、直感で。</p>
+      <div class="selection-counter">
+        <div class="counter-label"><span class="counter-num">${count}</span> 枚を選んでいるよ</div>
+        <div style="color: var(--ink-2); font-size: 0.9rem; font-weight:700;">目安：10枚</div>
+      </div>
+      <div class="card-grid" id="card-grid"></div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" id="back-btn">← もどる</button>
+        <button class="btn btn-primary" id="next-btn" ${count < 4 ? 'disabled' : ''}>次へ：TOP3を決める →</button>
+      </div>
+      ${count < 4 ? `<p class="helper-text" style="margin-top:8px;">※ TOP3＋迷った1枚で計4枚を指定するので、最低4枚は選んでください。</p>` : ''}
+    </div>
+  `;
+  const grid = document.getElementById('card-grid');
+  CARDS.forEach(name => {
+    const div = document.createElement('div');
+    const isSelected = STATE.selectedCards.includes(name);
+    div.className = 'value-card ' + colorClass(name) + (isSelected ? ' selected' : '');
+    div.textContent = name;
+    div.addEventListener('click', () => toggleSelect(name));
+    grid.appendChild(div);
+  });
+  document.getElementById('back-btn').addEventListener('click', () => { STATE.step = 0; save(); render(); });
+  document.getElementById('next-btn').addEventListener('click', () => {
+    if (STATE.selectedCards.length < 4) return;
+    STATE.step = 2; save(); render();
+  });
+}
+
+function toggleSelect(name) {
+  const idx = STATE.selectedCards.indexOf(name);
+  if (idx >= 0) {
+    STATE.selectedCards.splice(idx, 1);
+    ['top1','top2','top3','mayotta'].forEach(k => {
+      if (STATE[k] === name) STATE[k] = null;
+    });
+  } else {
+    STATE.selectedCards.push(name);
+  }
+  save();
+  render();
+}
+
+// ============================================================
+// Step 2: TOP3 ＋ 迷った1枚
+// ============================================================
+function renderRoles(app) {
+  const ok = STATE.top1 && STATE.top2 && STATE.top3 && STATE.mayotta;
+  app.innerHTML = `
+    <div class="card-box">
+      <h2><span class="h2-deco"></span>STEP 2：TOP3と「迷った1枚」を決める 👑</h2>
+      <p>下のカードをタップして、TOP1・TOP2・TOP3 と<strong>最後まで迷った1枚</strong>を指定してください。同じカードをもう一度タップすると解除できます。</p>
+      <div class="role-selector">
+        ${roleSlot('top1', 'TOP1', '🥇')}
+        ${roleSlot('top2', 'TOP2', '🥈')}
+        ${roleSlot('top3', 'TOP3', '🥉')}
+        ${roleSlot('mayotta', '迷った1枚', '💭')}
+      </div>
+      <h3 style="margin-top:24px;">あなたが選んだ ${STATE.selectedCards.length} 枚</h3>
+      <p class="helper-text">アクティブなスロット（上の枠）にカードが入ります。スロットをタップして切り替えられます。</p>
+      <div class="card-grid" id="card-grid"></div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" id="back-btn">← もどる</button>
+        <button class="btn btn-primary" id="next-btn" ${ok ? '' : 'disabled'}>次へ：理由を書く →</button>
+      </div>
+      ${ok ? '' : '<p class="helper-text" style="margin-top:8px;">※ 4つすべてを指定してください。</p>'}
+    </div>
+  `;
+
+  let activeSlot = window.__activeSlot || 'top1';
+  const slotOrder = ['top1','top2','top3','mayotta'];
+  if (STATE[activeSlot]) {
+    const next = slotOrder.find(s => !STATE[s]);
+    if (next) activeSlot = next;
+  }
+  window.__activeSlot = activeSlot;
+
+  document.querySelectorAll('.role-slot').forEach(el => {
+    el.classList.toggle('active', el.dataset.slot === activeSlot);
+    el.addEventListener('click', () => {
+      window.__activeSlot = el.dataset.slot;
+      render();
+    });
+  });
+
+  const grid = document.getElementById('card-grid');
+  STATE.selectedCards.forEach(name => {
+    const div = document.createElement('div');
+    const role = getRole(name);
+    div.className = 'value-card ' + colorClass(name) + (role ? ' role-' + role : '');
+    let badgeHtml = '';
+    if (role === 'top1') badgeHtml = '<span class="role-badge">🥇</span>';
+    if (role === 'top2') badgeHtml = '<span class="role-badge">🥈</span>';
+    if (role === 'top3') badgeHtml = '<span class="role-badge">🥉</span>';
+    if (role === 'mayotta') badgeHtml = '<span class="role-badge">💭</span>';
+    div.innerHTML = badgeHtml + escHtml(name);
+    div.addEventListener('click', () => assignRole(name));
+    grid.appendChild(div);
+  });
+  document.getElementById('back-btn').addEventListener('click', () => { STATE.step = 1; save(); render(); });
+  document.getElementById('next-btn').addEventListener('click', () => {
+    if (!ok) return;
+    STATE.step = 3; save(); render();
+  });
+}
+
+function roleSlot(slotKey, label, icon) {
+  const v = STATE[slotKey];
+  return `
+    <div class="role-slot ${v ? 'filled' : ''}" data-slot="${slotKey}">
+      <span class="role-icon">${icon}</span>
+      <div class="role-name">${label}</div>
+      <div class="role-value ${v ? '' : 'empty'}">${v ? escHtml(v) : '— 未選択 —'}</div>
+    </div>
+  `;
+}
+
+function getRole(name) {
+  if (STATE.top1 === name) return 'top1';
+  if (STATE.top2 === name) return 'top2';
+  if (STATE.top3 === name) return 'top3';
+  if (STATE.mayotta === name) return 'mayotta';
+  return null;
+}
+
+function assignRole(name) {
+  const currentRole = getRole(name);
+  if (currentRole) {
+    STATE[currentRole] = null;
+    save();
+    render();
+    return;
+  }
+  const active = window.__activeSlot || 'top1';
+  STATE[active] = name;
+  const next = ['top1','top2','top3','mayotta'].find(s => !STATE[s]);
+  if (next) window.__activeSlot = next;
+  save();
+  render();
+}
+
+// ============================================================
+// Step 3: 理由を書く
+// ============================================================
+function renderReasons(app) {
+  app.innerHTML = `
+    <div class="card-box">
+      <h2><span class="h2-deco"></span>STEP 3：選んだ理由を書く 📝</h2>
+      <p>TOP3 については「<strong>過去の経験</strong>」を結びつけて書いてください。「迷った1枚」については「<strong>なぜ TOP3 に入れなかったか</strong>」を書いてください。</p>
+      <p class="helper-text">文章が整わなくて OK。むしろ整いすぎないでほしいです。考えたまま・迷ったまま書いてください。</p>
+
+      ${reasonBlock('top1', 'TOP1', '🥇', STATE.top1)}
+      ${reasonBlock('top2', 'TOP2', '🥈', STATE.top2)}
+      ${reasonBlock('top3', 'TOP3', '🥉', STATE.top3)}
+      ${reasonBlock('mayotta', '最後まで迷った1枚', '💭', STATE.mayotta, true)}
+
+      <div class="btn-row">
+        <button class="btn btn-secondary" id="back-btn">← もどる</button>
+        <button class="btn btn-primary" id="next-btn">次へ：揺り戻しメモ →</button>
+      </div>
+    </div>
+  `;
+  ['top1','top2','top3','mayotta'].forEach(key => {
+    const ta = document.getElementById('reason-' + key);
+    if (ta) {
+      ta.addEventListener('input', e => { STATE.reasons[key] = e.target.value; save(); });
+    }
+  });
+  document.getElementById('back-btn').addEventListener('click', () => { STATE.step = 2; save(); render(); });
+  document.getElementById('next-btn').addEventListener('click', () => { STATE.step = 4; save(); render(); });
+}
+
+function reasonBlock(key, label, icon, cardName, isMayotta) {
+  const placeholder = isMayotta
+    ? `「${cardName || '◯◯'}」も大切だけれど、TOP3 に入れなかった理由は…\n（例：「学校生活」も大事だけど、自分の中では「自由」のほうが優先順位が高い。なぜなら…）`
+    : `「${cardName || '◯◯'}」を選んだ理由を、過去の経験と結びつけて…\n（例：中学の部活で◯◯が起きたとき、自分は…と感じた。だから「${cardName || '◯◯'}」が自分には大事だと思う）`;
+  const labelText = isMayotta
+    ? `${icon} 「${cardName || '?'}」を TOP3 に入れなかった理由`
+    : `${icon} ${label}「${cardName || '?'}」を選んだ理由`;
+  return `
+    <div class="form-group">
+      <label class="form-label" for="reason-${key}">${labelText}</label>
+      <textarea id="reason-${key}" class="form-textarea" rows="4" placeholder="${escHtml(placeholder)}">${escHtml(STATE.reasons[key] || '')}</textarea>
+    </div>
+  `;
+}
+
+// ============================================================
+// Step 4: 揺り戻しメモ
+// ============================================================
+function renderYurimoshi(app) {
+  app.innerHTML = `
+    <div class="card-box">
+      <h2><span class="h2-deco"></span>STEP 4：揺り戻しメモ 💭</h2>
+      <div class="yurimoshi-box">
+        <strong>このパートは、グループ共有のあとに書きます。</strong><br>
+        他の人の TOP3 や迷った1枚を聞いて、自分の中で揺らいだ点・新しく気になったカード・絶対選ばないと思っていたのに揺れた経験などを、思いついたまま書いてください。
+      </div>
+      <p class="helper-text">書ききらなくて OK。「全然揺らがなかった」も立派な記録です。</p>
+      <div class="form-group">
+        <label class="form-label" for="yurimoshi-input">揺り戻しメモ<span class="badge">共有後に追記</span></label>
+        <textarea id="yurimoshi-input" class="form-textarea" rows="7" placeholder="（例）&#10;・◯◯さんが「冒険」を1位にしていた。自分は最初から外していたけど、聞いてみると確かに自分の中にもある気がしてきた。&#10;・「家族」を選ぶ人が多かった。自分は選ばなかったけど、なんとなく恥ずかしくて避けた可能性がある。">${escHtml(STATE.yurimoshi)}</textarea>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" id="back-btn">← もどる</button>
+        <button class="btn btn-cta" id="next-btn">結果を見る 🎉</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('yurimoshi-input').addEventListener('input', e => { STATE.yurimoshi = e.target.value; save(); });
+  document.getElementById('back-btn').addEventListener('click', () => { STATE.step = 3; save(); render(); });
+  document.getElementById('next-btn').addEventListener('click', () => { STATE.step = 5; save(); render(); });
+}
+
+// ============================================================
+// Step 5: 結果
+// ============================================================
+function renderResult(app) {
+  const droppedAtTop3 = STATE.selectedCards.filter(c =>
+    c !== STATE.top1 && c !== STATE.top2 && c !== STATE.top3 && c !== STATE.mayotta
+  );
+
+  app.innerHTML = `
+    <div class="card-box">
+      <div class="result-title-row">
+        <div class="crown">👑</div>
+        <h2>あなたの価値観カード</h2>
+      </div>
+      <p class="meta-info" style="text-align:center;"><strong>${escHtml(STATE.name)}</strong>${STATE.classNo ? ' ／ ' + escHtml(STATE.classNo) : ''}</p>
+      <p class="meta-info" style="text-align:center;">作成日時：${formatDate(STATE.updatedAt)}</p>
+
+      <div class="result-section">
+        <h3>🏆 TOP3</h3>
+        ${resultTopBlock('t1', 'TOP1', STATE.top1, STATE.reasons.top1)}
+        ${resultTopBlock('t2', 'TOP2', STATE.top2, STATE.reasons.top2)}
+        ${resultTopBlock('t3', 'TOP3', STATE.top3, STATE.reasons.top3)}
+      </div>
+
+      <div class="result-section">
+        <h3>💭 最後まで迷った1枚</h3>
+        ${resultTopBlock('mayotta', '迷った1枚（TOP3に入れなかった）', STATE.mayotta, STATE.reasons.mayotta)}
+      </div>
+
+      <div class="result-section">
+        <h3>🗺 選択の軌跡</h3>
+        <p class="meta-info">73枚 → <strong>${STATE.selectedCards.length} 枚</strong> に絞り → TOP3 ＋迷った1枚を選択</p>
+        <p style="margin-top:14px; font-weight:700; color:var(--ink);">TOP3 にも迷った1枚にも入らなかった ${droppedAtTop3.length} 枚：</p>
+        <div class="trajectory-cards">
+          ${droppedAtTop3.length === 0
+            ? '<span class="meta-info">（なし）</span>'
+            : droppedAtTop3.map(c => `<span class="trajectory-chip">${escHtml(c)}</span>`).join('')}
+        </div>
+      </div>
+
+      <div class="result-section">
+        <h3>📝 揺り戻しメモ（共有後の追記）</h3>
+        <div class="result-top-reason ${STATE.yurimoshi ? '' : 'empty'}" style="background:#fafaff; padding:14px 18px; border-radius:14px;">${STATE.yurimoshi ? escHtml(STATE.yurimoshi) : '（未記入）'}</div>
+      </div>
+
+      <div class="btn-row no-print">
+        <button class="btn btn-primary" id="print-btn">🖨 印刷／PDF保存</button>
+        <button class="btn btn-secondary" id="copy-btn">📋 テキストでコピー</button>
+        <button class="btn btn-secondary" id="back-btn">← 揺り戻しメモにもどる</button>
+        <button class="btn btn-danger" id="reset-btn">最初からやり直す</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('print-btn').addEventListener('click', () => window.print());
+  document.getElementById('copy-btn').addEventListener('click', copyAsText);
+  document.getElementById('back-btn').addEventListener('click', () => { STATE.step = 4; save(); render(); });
+  document.getElementById('reset-btn').addEventListener('click', reset);
+
+  // 紙吹雪
+  fireConfetti();
+}
+
+function resultTopBlock(cls, label, name, reason) {
+  return `
+    <div class="result-top-card ${cls}">
+      <div class="result-top-label">${label}</div>
+      <div class="result-top-name">${name ? escHtml(name) : '（未選択）'}</div>
+      <div class="result-top-reason ${reason ? '' : 'empty'}">${reason ? escHtml(reason) : '（未記入）'}</div>
+    </div>
+  `;
+}
+
+function fireConfetti() {
+  const colors = ['#ec4899', '#a855f7', '#3b82f6', '#14b8a6', '#f59e0b', '#ef4444', '#22c55e'];
+  for (let i = 0; i < 40; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti';
+    el.style.left = Math.random() * 100 + 'vw';
+    el.style.background = colors[Math.floor(Math.random() * colors.length)];
+    el.style.animationDuration = (2.5 + Math.random() * 2) + 's';
+    el.style.animationDelay = (Math.random() * 0.8) + 's';
+    el.style.transform = `rotate(${Math.random() * 360}deg)`;
+    el.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 5500);
+  }
+}
+
+// ============================================================
+// テキストコピー
+// ============================================================
+function copyAsText() {
+  const droppedAtTop3 = STATE.selectedCards.filter(c =>
+    c !== STATE.top1 && c !== STATE.top2 && c !== STATE.top3 && c !== STATE.mayotta
+  );
+  const lines = [];
+  lines.push(`【価値観カード】${STATE.name}${STATE.classNo ? ' ／ ' + STATE.classNo : ''}`);
+  lines.push(`作成日時：${formatDate(STATE.updatedAt)}`);
+  lines.push('');
+  lines.push('■ TOP3');
+  lines.push(`TOP1：${STATE.top1 || '（未選択）'}`);
+  lines.push(`  理由：${STATE.reasons.top1 || '（未記入）'}`);
+  lines.push(`TOP2：${STATE.top2 || '（未選択）'}`);
+  lines.push(`  理由：${STATE.reasons.top2 || '（未記入）'}`);
+  lines.push(`TOP3：${STATE.top3 || '（未選択）'}`);
+  lines.push(`  理由：${STATE.reasons.top3 || '（未記入）'}`);
+  lines.push('');
+  lines.push('■ 最後まで迷った1枚');
+  lines.push(`${STATE.mayotta || '（未選択）'}`);
+  lines.push(`  TOP3に入れなかった理由：${STATE.reasons.mayotta || '（未記入）'}`);
+  lines.push('');
+  lines.push('■ 選択の軌跡');
+  lines.push(`73枚 → ${STATE.selectedCards.length}枚 → TOP3＋迷った1枚`);
+  lines.push(`TOP3にも迷った1枚にも入らなかった${droppedAtTop3.length}枚：${droppedAtTop3.join('、') || '（なし）'}`);
+  lines.push('');
+  lines.push('■ 揺り戻しメモ（共有後の追記）');
+  lines.push(STATE.yurimoshi || '（未記入）');
+
+  const text = lines.join('\n');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(
+      () => alert('テキストをコピーしました。Google Docs 等に貼り付けることができます。'),
+      () => fallbackCopy(text)
+    );
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.left = '-9999px';
+  document.body.appendChild(ta);
+  ta.select();
+  try {
+    document.execCommand('copy');
+    alert('テキストをコピーしました。');
+  } catch (e) {
+    alert('コピーに失敗しました。下のテキストを手動でコピーしてください：\n\n' + text);
+  }
+  document.body.removeChild(ta);
+}
+
+// ============================================================
+// ヘルパー
+// ============================================================
+function escHtml(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function formatDate(iso) {
+  if (!iso) return '—';
+  try {
+    const d = new Date(iso);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const h = String(d.getHours()).padStart(2, '0');
+    const mi = String(d.getMinutes()).padStart(2, '0');
+    return `${y}-${m}-${day} ${h}:${mi}`;
+  } catch (e) {
+    return iso;
+  }
+}
+
+// ============================================================
+// 起動
+// ============================================================
+load();
+render();
+</script>
+
+</body>
+</html>
