@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>学校生活の星座 ─ 自分だけの空をつくる</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky-top:#0a1128;
+    --sky-mid:#141a3a;
+    --sky-bot:#1d1147;
+    --gold:#ffd98a;
+    --gold-deep:#e9b24a;
+    --gold-soft:#f7e8c2;
+    --star:#fff7e0;
+    --line:rgba(255,221,160,.5);
+    --text:#e9ecff;
+    --muted:#959dce;
+    --panel:rgba(17,23,54,.72);
+    --panel-2:rgba(26,32,70,.65);
+    --border:rgba(150,162,235,.22);
+    --border-bright:rgba(255,217,138,.45);
+    --danger:#ff8b8b;
+    --t-bukatsu:#ffcf6b;
+    --t-jugyo:#86b6ff;
+    --t-yujin:#ff9ec9;
+    --t-ie:#8fe6ac;
+    --t-jibun:#c8a4ff;
+    --t-q:#dfe5ff;
+    --t-none:#fff3d6;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0;}
+  body{
+    font-family:'M PLUS Rounded 1c', system-ui, sans-serif;
+    color:var(--text);
+    background:
+      radial-gradient(1200px 700px at 78% -8%, rgba(122,90,200,.30), transparent 60%),
+      radial-gradient(900px 600px at 12% 108%, rgba(70,110,210,.22), transparent 55%),
+      linear-gradient(160deg, var(--sky-top) 0%, var(--sky-mid) 48%, var(--sky-bot) 100%);
+    background-attachment:fixed;
+    min-height:100vh;
+    line-height:1.7;
+    overflow-x:hidden;
+  }
+  /* drifting star dust */
+  #dust{position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden;}
+  .dot{position:absolute; border-radius:50%; background:#fff; opacity:.5;
+    animation:twinkle var(--d,4s) ease-in-out infinite alternate;}
+  @keyframes twinkle{from{opacity:.12; transform:scale(.7);} to{opacity:.9; transform:scale(1.1);}}
+
+  .wrap{position:relative; z-index:1; max-width:980px; margin:0 auto; padding:22px 18px 80px;}
+
+  header.app{display:flex; flex-direction:column; gap:6px; margin-bottom:14px;}
+  .title{font-size:clamp(20px,4.5vw,30px); font-weight:800; letter-spacing:.03em;
+    background:linear-gradient(90deg,#fff,var(--gold) 55%,#fff); -webkit-background-clip:text; background-clip:text; color:transparent;
+    text-shadow:0 0 26px rgba(255,217,138,.18);}
+  .subtitle{color:var(--muted); font-size:13px; letter-spacing:.04em;}
+
+  .progress{display:flex; gap:6px; margin:12px 0 18px; flex-wrap:wrap;}
+  .pip{flex:1; min-width:24px; height:5px; border-radius:99px; background:rgba(255,255,255,.10); overflow:hidden; position:relative;}
+  .pip.done{background:linear-gradient(90deg,var(--gold-deep),var(--gold));}
+  .pip.now{background:rgba(255,255,255,.16);}
+  .pip.now::after{content:""; position:absolute; inset:0; background:linear-gradient(90deg,var(--gold-deep),var(--gold)); animation:fillp 1.2s ease forwards;}
+  @keyframes fillp{from{transform:translateX(-100%);} to{transform:translateX(0);}}
+
+  .screen{display:none; animation:rise .5s ease both;}
+  .screen.active{display:block;}
+  @keyframes rise{from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:translateY(0);}}
+
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:20px; padding:22px;
+    backdrop-filter:blur(8px); box-shadow:0 18px 50px -22px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.04);}
+  .card + .card{margin-top:16px;}
+
+  h2.step{font-size:19px; font-weight:800; margin:0 0 4px; display:flex; align-items:center; gap:9px;}
+  h2.step .no{font-size:12px; color:#0a1128; background:linear-gradient(135deg,var(--gold),var(--gold-deep)); width:26px; height:26px; display:grid; place-items:center; border-radius:50%; font-weight:800; flex:none; box-shadow:0 0 16px rgba(255,217,138,.5);}
+  .lead{color:var(--muted); font-size:14px; margin:2px 0 16px;}
+
+  .promise{border:1px dashed var(--border-bright); border-radius:16px; padding:13px 16px; background:rgba(255,217,138,.05);
+    color:var(--gold-soft); font-size:13.5px; display:flex; gap:10px; align-items:flex-start; margin:14px 0;}
+  .promise .ic{font-size:17px; line-height:1;}
+
+  label.fld{display:block; font-size:12.5px; color:var(--muted); margin:12px 0 5px; font-weight:500;}
+  label.fld .opt{color:#6f78a6; font-weight:400;}
+  input[type=text], textarea, select{
+    width:100%; background:rgba(8,12,32,.55); border:1px solid var(--border); color:var(--text);
+    border-radius:12px; padding:11px 13px; font-family:inherit; font-size:15px; outline:none; transition:.18s;}
+  textarea{resize:vertical; min-height:62px; line-height:1.6;}
+  input:focus, textarea:focus, select:focus{border-color:var(--border-bright); box-shadow:0 0 0 3px rgba(255,217,138,.12);}
+  select{appearance:none; background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%); background-position:calc(100% - 18px) 50%, calc(100% - 13px) 50%; background-size:5px 5px,5px 5px; background-repeat:no-repeat;}
+
+  .btn{font-family:inherit; cursor:pointer; border:none; font-weight:700; font-size:15px; padding:12px 22px; border-radius:99px; transition:transform .16s ease, box-shadow .2s ease, background .2s; color:#0c1024;
+    background:linear-gradient(135deg,var(--gold-soft),var(--gold) 45%,var(--gold-deep)); box-shadow:0 10px 28px -10px rgba(255,200,100,.6), inset 0 1px 0 rgba(255,255,255,.5);}
+  .btn:hover{transform:translateY(-2px) scale(1.02); box-shadow:0 16px 34px -10px rgba(255,200,100,.7);}
+  .btn:active{transform:translateY(0) scale(.99);}
+  .btn.ghost{background:rgba(255,255,255,.06); color:var(--text); border:1px solid var(--border); box-shadow:none;}
+  .btn.ghost:hover{border-color:var(--border-bright); background:rgba(255,255,255,.10);}
+  .btn.sm{font-size:13px; padding:9px 16px;}
+  .btn:disabled{opacity:.4; cursor:not-allowed; transform:none; box-shadow:none;}
+  .btn-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; align-items:center;}
+  .spacer{flex:1;}
+
+  /* star editor */
+  .add-grid{display:grid; grid-template-columns:1fr 130px; gap:10px;}
+  @media(max-width:560px){ .add-grid{grid-template-columns:1fr;} }
+  .star-list{display:flex; flex-direction:column; gap:9px; margin-top:14px;}
+  .star-item{display:flex; gap:11px; align-items:flex-start; background:var(--panel-2); border:1px solid var(--border); border-radius:13px; padding:11px 13px; transition:.18s;}
+  .star-item:hover{border-color:var(--border-bright);}
+  .star-item .glyph{flex:none; width:30px; height:30px; display:grid; place-items:center; font-size:17px; filter:drop-shadow(0 0 6px currentColor);}
+  .star-item .body{flex:1; min-width:0;}
+  .star-item .st-title{font-weight:700; font-size:15px; word-break:break-word;}
+  .star-item .st-note{color:var(--muted); font-size:12.5px; margin-top:2px; word-break:break-word;}
+  .chip{display:inline-block; font-size:11px; padding:1px 9px; border-radius:99px; border:1px solid currentColor; opacity:.9; margin-top:4px;}
+  .st-actions{display:flex; gap:6px; flex:none;}
+  .icon-btn{cursor:pointer; background:rgba(255,255,255,.06); border:1px solid var(--border); color:var(--muted); width:30px; height:30px; border-radius:9px; font-size:14px; display:grid; place-items:center; transition:.15s;}
+  .icon-btn:hover{color:#fff; border-color:var(--border-bright);}
+  .icon-btn.del:hover{color:var(--danger); border-color:rgba(255,139,139,.5);}
+  .counter{font-size:12.5px; color:var(--muted); margin-top:12px;}
+  .counter b{color:var(--gold);}
+
+  /* stage / svg canvas */
+  .stage-wrap{position:relative; width:100%; border-radius:18px; overflow:hidden; border:1px solid var(--border);
+    background:
+      radial-gradient(120% 90% at 50% 0%, rgba(60,40,110,.35), transparent 60%),
+      radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,.5), transparent),
+      radial-gradient(1px 1px at 70% 60%, rgba(255,255,255,.4), transparent),
+      radial-gradient(1px 1px at 40% 80%, rgba(255,255,255,.35), transparent),
+      linear-gradient(160deg,#080d24,#120a2c);
+    box-shadow:inset 0 0 80px rgba(0,0,0,.6);}
+  svg.stage{display:block; width:100%; height:auto; touch-action:none; cursor:default;}
+  svg.stage.connect{cursor:pointer;}
+  .star-g{cursor:grab;}
+  .star-g.dragging{cursor:grabbing;}
+  .star-label{font-family:'M PLUS Rounded 1c',sans-serif; font-size:15px; font-weight:500; fill:#eef0ff; paint-order:stroke; stroke:rgba(8,10,30,.85); stroke-width:3px; pointer-events:none;}
+  .line-label{font-family:'M PLUS Rounded 1c',sans-serif; font-size:13px; fill:var(--gold-soft); paint-order:stroke; stroke:rgba(8,10,30,.9); stroke-width:3px; pointer-events:none;}
+  .twinkle{animation:tw var(--tw,3s) ease-in-out infinite alternate;}
+  @keyframes tw{from{opacity:.55;} to{opacity:1;}}
+  .stage-hint{position:absolute; left:12px; top:11px; font-size:12px; color:var(--muted); background:rgba(8,12,32,.55); padding:5px 11px; border-radius:99px; border:1px solid var(--border); pointer-events:none; backdrop-filter:blur(4px);}
+
+  .line-panel{display:none; margin-top:13px; background:var(--panel-2); border:1px solid var(--border-bright); border-radius:14px; padding:13px;}
+  .line-panel.show{display:block; animation:rise .25s ease both;}
+  .line-panel .lp-head{font-size:13px; color:var(--gold-soft); margin-bottom:7px; font-weight:700;}
+
+  .empty-note{color:var(--muted); font-size:13.5px; text-align:center; padding:18px; border:1px dashed var(--border); border-radius:14px; margin-top:12px;}
+
+  /* welcome */
+  .welcome-hero{text-align:center; padding:14px 6px 4px;}
+  .welcome-hero .big{font-size:clamp(26px,6.5vw,40px); font-weight:800; line-height:1.35;
+    background:linear-gradient(120deg,#fff,var(--gold),#cdb6ff); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .welcome-hero p{color:var(--muted); font-size:14.5px; max-width:440px; margin:12px auto 0;}
+  .orbit{width:120px; height:120px; margin:6px auto 4px; position:relative;}
+
+  /* result */
+  .result-name{font-size:clamp(22px,5.5vw,34px); font-weight:800; text-align:center; margin:6px 0 2px;
+    background:linear-gradient(120deg,#fff,var(--gold) 60%,#fff); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .result-meta{text-align:center; color:var(--muted); font-size:13px; margin-bottom:14px;}
+  .reason-box{background:rgba(255,217,138,.06); border:1px solid var(--border-bright); border-radius:14px; padding:14px 16px; font-size:14.5px; color:var(--gold-soft); margin-top:10px;}
+  .rlist{list-style:none; padding:0; margin:8px 0 0; display:flex; flex-direction:column; gap:7px;}
+  .rlist li{background:var(--panel-2); border:1px solid var(--border); border-radius:11px; padding:9px 13px; font-size:14px;}
+  .rlist li .rt{font-weight:700;}
+  .rlist li .rn{color:var(--muted); font-size:12.5px;}
+  .rel-line{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .rel-line .arrow{color:var(--gold); font-weight:700;}
+  .rel-line .why{color:var(--muted); font-size:12.5px; font-style:italic;}
+  h3.rh{font-size:15px; margin:20px 0 4px; color:var(--gold-soft); display:flex; align-items:center; gap:8px;}
+  h3.rh::before{content:""; width:14px; height:1px; background:var(--gold);}
+
+  .toast{position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:rgba(20,26,60,.95); border:1px solid var(--border-bright); color:var(--gold-soft); padding:11px 22px; border-radius:99px; font-size:14px; z-index:50; opacity:0; transition:.3s; pointer-events:none; backdrop-filter:blur(6px);}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  @media print{
+    body{background:#0a1128 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    #dust, .progress, header.app .subtitle, .btn, .btn-row, .stage-hint, .no-print, .icon-btn{display:none !important;}
+    .wrap{max-width:none; padding:0;}
+    .card{break-inside:avoid; box-shadow:none; border-color:#3a3f70;}
+    .screen{display:none !important;}
+    .screen#screen-result{display:block !important;}
+  }
+</style>
+</head>
+<body>
+<div id="dust"></div>
+<div class="wrap">
+  <header class="app">
+    <div class="title">学校生活の星座</div>
+    <div class="subtitle">─ 自分だけの空をつくる</div>
+  </header>
+  <div class="progress" id="progress"></div>
+
+  <!-- STEP 1 -->
+  <section class="screen" id="screen-welcome" data-step="1">
+    <div class="card">
+      <div class="welcome-hero">
+        <div class="orbit" id="orbit"></div>
+        <div class="big">夜空に、<br>あなたの一ヶ月を散りばめよう</div>
+        <p>最近の学校生活で心に残った出来事や気持ちを「星」にして書き出し、自由に並べて、線でつないで、自分だけの「星座」をつくります。</p>
+      </div>
+      <div class="promise"><span class="ic">✦</span><span>正解はありません。きれいに並べなくて大丈夫。ぐちゃぐちゃの星座のほうが、あなたらしいかもしれません。</span></div>
+      <label class="fld">名前 <span style="color:var(--danger)">*</span></label>
+      <input type="text" id="in-name" placeholder="例：山田 はなこ" maxlength="40">
+      <div class="add-grid" style="margin-top:4px">
+        <div><label class="fld">クラス <span class="opt">（任意）</span></label><input type="text" id="in-class" placeholder="例：1年3組" maxlength="20"></div>
+        <div><label class="fld">出席番号 <span class="opt">（任意）</span></label><input type="text" id="in-number" placeholder="例：12" maxlength="10"></div>
+      </div>
+      <div class="btn-row"><div class="spacer"></div><button class="btn" id="btn-start">自分の星座をつくる ✦</button></div>
+    </div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section class="screen" id="screen-write" data-step="2">
+    <div class="card">
+      <h2 class="step"><span class="no">2</span>星を書き出す</h2>
+      <p class="lead">この一ヶ月の学校生活から、印象に残った瞬間・気になっていること・モヤモヤ・嬉しかったことを書き出します。<b style="color:var(--gold)">10〜15個</b>くらいが目安（最低5個）。</p>
+      <div class="promise"><span class="ic">☄</span><span>整理しなくてOK。順番も気にしないで、とにかく頭に浮かんだものを書き出してみましょう。</span></div>
+
+      <label class="fld">星のタイトル <span style="color:var(--danger)">*</span> <span class="opt">（15文字くらい）</span></label>
+      <div class="add-grid">
+        <input type="text" id="st-title" placeholder="例：部活で先輩とぶつかった" maxlength="40" autocomplete="off">
+        <select id="st-tag">
+          <option value="">タグなし</option>
+          <option value="部活">部活</option>
+          <option value="授業">授業</option>
+          <option value="友人">友人</option>
+          <option value="家">家</option>
+          <option value="自分">自分</option>
+          <option value="?">？ もやもや</option>
+        </select>
+      </div>
+      <label class="fld">詳細メモ <span class="opt">（任意・自由記述）</span></label>
+      <textarea id="st-note" placeholder="どんな気持ちだった？ 何があった？ 思いつくままに。"></textarea>
+      <div class="btn-row"><button class="btn sm" id="btn-add-star">＋ 星を追加</button><span id="edit-hint" style="color:var(--muted); font-size:12.5px; display:none;">編集中… 追加すると更新されます</span></div>
+
+      <div class="star-list" id="star-list"></div>
+      <div class="counter">いまの星の数：<b id="star-count">0</b> 個　<span id="count-msg" style="color:var(--muted)"></span></div>
+
+      <div class="btn-row"><button class="btn ghost sm" data-go="1">← もどる</button><div class="spacer"></div><button class="btn" id="to-map" disabled>空にならべる →</button></div>
+    </div>
+  </section>
+
+  <!-- STEP 3 -->
+  <section class="screen" id="screen-map" data-step="3">
+    <div class="card">
+      <h2 class="step"><span class="no">3</span>星をならべる</h2>
+      <p class="lead">星をドラッグして、夜空の好きな場所に置きましょう。</p>
+      <div class="promise"><span class="ic">✧</span><span>重要だと思うものは中心に。似ているものは近くに。── 距離も位置も、すべて自由です。</span></div>
+      <div class="stage-wrap">
+        <div class="stage-hint">指やマウスで星をドラッグ</div>
+        <svg class="stage" id="svg-map" viewBox="0 0 1000 680" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+      <div class="btn-row"><button class="btn ghost sm" data-go="2">← もどる</button><div class="spacer"></div><button class="btn" data-go="4">線でつなぐ →</button></div>
+    </div>
+  </section>
+
+  <!-- STEP 4 -->
+  <section class="screen" id="screen-connect" data-step="4">
+    <div class="card">
+      <h2 class="step"><span class="no">4</span>星をつなぐ</h2>
+      <p class="lead">2つの星をタップ（クリック）すると、線でつながります。ドラッグすれば位置も直せます。</p>
+      <div class="promise"><span class="ic">✦</span><span>線が交差してもOK。「なぜつないだか」や「つなぐか迷った気持ち」を、線のメモに残せます。</span></div>
+      <div class="stage-wrap">
+        <div class="stage-hint" id="connect-hint">星をタップして1つ選ぶ → もう1つで線</div>
+        <svg class="stage connect" id="svg-connect" viewBox="0 0 1000 680" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+      <div class="line-panel" id="line-panel">
+        <div class="lp-head" id="lp-head">この線について</div>
+        <label class="fld" style="margin-top:0">なぜつなげた？／迷い <span class="opt">（任意・一言）</span></label>
+        <input type="text" id="lp-label" placeholder="例：どっちも「焦り」が原因かも" maxlength="50">
+        <div class="btn-row" style="margin-top:11px"><button class="btn sm" id="lp-save">メモを保存</button><button class="btn ghost sm del-line" id="lp-del" style="color:var(--danger)">この線を消す</button><div class="spacer"></div><button class="btn ghost sm" id="lp-close">閉じる</button></div>
+      </div>
+      <div class="counter">引いた線：<b id="line-count">0</b> 本</div>
+      <div class="btn-row"><button class="btn ghost sm" data-go="3">← もどる</button><div class="spacer"></div><button class="btn" data-go="5">星座に名前をつける →</button></div>
+    </div>
+  </section>
+
+  <!-- STEP 5 -->
+  <section class="screen" id="screen-name" data-step="5">
+    <div class="card">
+      <h2 class="step"><span class="no">5</span>星座に名前をつける</h2>
+      <p class="lead">できあがった星座の全体に、名前をつけましょう。</p>
+      <div class="promise"><span class="ic">★</span><span>ふざけた名前でもOK。むしろ真面目すぎないほうが、あなたらしさが出ます。<br>例：「焦りの七人の侍」「ぐるぐる三角形」「迷子のオリオン」</span></div>
+      <div class="stage-wrap" style="margin-bottom:14px">
+        <svg class="stage" id="svg-name" viewBox="0 0 1000 680" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+      <label class="fld">星座の名前 <span style="color:var(--danger)">*</span></label>
+      <input type="text" id="in-cname" placeholder="例：迷子のオリオン" maxlength="40">
+      <label class="fld">この名前にした理由 <span style="color:var(--danger)">*</span></label>
+      <textarea id="in-reason" placeholder="どうしてこの名前にした？ 星座を見て気づいたことは？"></textarea>
+      <div class="btn-row"><button class="btn ghost sm" data-go="4">← もどる</button><div class="spacer"></div><button class="btn" id="to-wobble" disabled>できた！ →</button></div>
+    </div>
+  </section>
+
+  <!-- STEP 6 -->
+  <section class="screen" id="screen-wobble" data-step="6">
+    <div class="card">
+      <h2 class="step"><span class="no">6</span>見せ合ったあとに（揺り戻しメモ）</h2>
+      <p class="lead">グループで星座を見せ合ったあと、心が揺らいだこと・新しく気づいたことがあれば書き残します。</p>
+      <div class="promise"><span class="ic">↺</span><span>「やっぱりこの線いらないかも」「逆にここを近づけたい」── そういう"揺らぎ"こそ、思考の痕跡です。書かなくてもOK。</span></div>
+      <label class="fld">揺り戻しメモ <span class="opt">（任意）</span></label>
+      <textarea id="in-wobble" placeholder="見せ合って気づいたこと、心が動いたこと…" style="min-height:110px"></textarea>
+      <div class="btn-row"><button class="btn ghost sm" data-go="5">← もどる</button><div class="spacer"></div><button class="btn" id="to-result">星座を完成させる ✦</button></div>
+    </div>
+  </section>
+
+  <!-- STEP 7 -->
+  <section class="screen" id="screen-result" data-step="7">
+    <div class="card">
+      <div style="text-align:center; color:var(--gold-soft); font-size:13px; letter-spacing:.2em; margin-bottom:4px;">✦ あなたの星座が完成しました ✦</div>
+      <div class="result-name" id="r-name">─</div>
+      <div class="result-meta" id="r-meta"></div>
+      <div class="stage-wrap">
+        <svg class="stage" id="svg-result" viewBox="0 0 1000 680" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+      <div class="btn-row no-print">
+        <button class="btn sm" id="btn-png">★ 星座を画像で保存</button>
+        <button class="btn ghost sm" id="btn-print">印刷 / PDF保存</button>
+        <button class="btn ghost sm" id="btn-copy">テキストでコピー</button>
+        <div class="spacer"></div>
+        <button class="btn ghost sm" id="btn-restart" style="color:var(--danger)">最初からやり直す</button>
+      </div>
+
+      <h3 class="rh">命名理由</h3>
+      <div class="reason-box" id="r-reason">─</div>
+
+      <h3 class="rh">星のリスト</h3>
+      <ul class="rlist" id="r-stars"></ul>
+
+      <h3 class="rh">つながった関係性</h3>
+      <ul class="rlist" id="r-lines"></ul>
+
+      <h3 class="rh" id="r-wobble-h" style="display:none">揺り戻しメモ</h3>
+      <div class="reason-box" id="r-wobble" style="display:none"></div>
+    </div>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+const SVGNS="http://www.w3.org/2000/svg";
+const VB_W=1000, VB_H=680;
+const KEY="seiza-app-v1";
+
+const TAGS={
+  "部活":{c:"#ffcf6b",g:"🏐"}, "授業":{c:"#86b6ff",g:"📖"}, "友人":{c:"#ff9ec9",g:"💬"},
+  "家":{c:"#8fe6ac",g:"🏠"}, "自分":{c:"#c8a4ff",g:"🌙"}, "?":{c:"#dfe5ff",g:"❓"},
+  "":{c:"#fff3d6",g:"✦"}
+};
+function tagColor(t){ return (TAGS[t]||TAGS[""]).c; }
+function tagGlyph(t){ return (TAGS[t]||TAGS[""]).g; }
+
+let state=load();
+
+function blankState(){
+  return {step:1,name:"",className:"",number:"",stars:[],lines:[],
+    constellationName:"",namingReason:"",wobble:"",createdAt:null,_idc:1};
+}
+function load(){
+  try{ const raw=localStorage.getItem(KEY); if(raw){ const s=JSON.parse(raw); return Object.assign(blankState(),s);} }catch(e){}
+  return blankState();
+}
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify(state)); }catch(e){} }
+function uid(p){ return p+(state._idc++); }
+
+/* ---------- background dust ---------- */
+(function(){
+  const d=document.getElementById("dust"); let html="";
+  for(let i=0;i<70;i++){
+    const s=Math.random()*2+1, x=Math.random()*100, y=Math.random()*100,
+      dur=(Math.random()*4+2.5).toFixed(2), de=(Math.random()*4).toFixed(2);
+    html+=`<span class="dot" style="width:${s}px;height:${s}px;left:${x}%;top:${y}%;--d:${dur}s;animation-delay:${de}s"></span>`;
+  }
+  d.innerHTML=html;
+})();
+/* orbit on welcome */
+(function(){
+  const o=document.getElementById("orbit");
+  o.innerHTML=`<svg viewBox="0 0 120 120" width="120" height="120">
+    <circle cx="60" cy="60" r="48" fill="none" stroke="rgba(255,217,138,.2)" stroke-dasharray="2 7"/>
+    <g class="twinkle" style="--tw:2.4s"><path d="M60 26 l4 12 12 4 -12 4 -4 12 -4 -12 -12 -4 12 -4z" fill="#fff7e0"/></g>
+    <circle cx="96" cy="72" r="2.4" fill="#ffd98a" class="twinkle" style="--tw:1.8s"/>
+    <circle cx="30" cy="44" r="1.8" fill="#c8a4ff" class="twinkle" style="--tw:3s"/>
+    <circle cx="44" cy="92" r="2" fill="#86b6ff" class="twinkle" style="--tw:2.2s"/>
+  </svg>`;
+})();
+
+/* ---------- navigation ---------- */
+function show(step){
+  state.step=step; save();
+  document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active", +s.dataset.step===step));
+  renderProgress();
+  window.scrollTo({top:0,behavior:"smooth"});
+  if(step===3) drawStage(document.getElementById("svg-map"),"drag");
+  if(step===4){ closeLinePanel(); drawStage(document.getElementById("svg-connect"),"connect"); updateLineCount(); }
+  if(step===5) drawStage(document.getElementById("svg-name"),"view");
+  if(step===7) renderResult();
+}
+function renderProgress(){
+  const p=document.getElementById("progress"); let h="";
+  for(let i=1;i<=7;i++){ const cls=i<state.step?"done":(i===state.step?"now":""); h+=`<div class="pip ${cls}"></div>`; }
+  p.innerHTML=h;
+}
+document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>show(+b.dataset.go)));
+
+/* ---------- STEP 1 ---------- */
+const inName=document.getElementById("in-name"), inClass=document.getElementById("in-class"), inNum=document.getElementById("in-number");
+inName.value=state.name; inClass.value=state.className; inNum.value=state.number;
+document.getElementById("btn-start").addEventListener("click",()=>{
+  if(!inName.value.trim()){ toast("名前を入れてね"); inName.focus(); return; }
+  state.name=inName.value.trim(); state.className=inClass.value.trim(); state.number=inNum.value.trim();
+  save(); show(2); renderStarList();
+});
+
+/* ---------- STEP 2: star editor ---------- */
+const stTitle=document.getElementById("st-title"), stTag=document.getElementById("st-tag"), stNote=document.getElementById("st-note");
+let editingId=null;
+function rnd(min,max){ return Math.random()*(max-min)+min; }
+document.getElementById("btn-add-star").addEventListener("click",()=>{
+  const t=stTitle.value.trim();
+  if(!t){ toast("タイトルを入れてね"); stTitle.focus(); return; }
+  if(editingId){
+    const s=state.stars.find(x=>x.id===editingId);
+    if(s){ s.title=t; s.tag=stTag.value; s.note=stNote.value.trim(); }
+    editingId=null; document.getElementById("edit-hint").style.display="none";
+    document.getElementById("btn-add-star").textContent="＋ 星を追加";
+  }else{
+    state.stars.push({id:uid("s"),title:t,tag:stTag.value,note:stNote.value.trim(),
+      x:rnd(180,820),y:rnd(140,540)});
+  }
+  stTitle.value=""; stNote.value=""; stTag.value="";
+  save(); renderStarList(); stTitle.focus();
+});
+stTitle.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); document.getElementById("btn-add-star").click(); }});
+function editStar(id){
+  const s=state.stars.find(x=>x.id===id); if(!s) return;
+  stTitle.value=s.title; stTag.value=s.tag||""; stNote.value=s.note||"";
+  editingId=id; document.getElementById("edit-hint").style.display="inline";
+  document.getElementById("btn-add-star").textContent="✓ 更新する";
+  stTitle.focus(); stTitle.scrollIntoView({behavior:"smooth",block:"center"});
+}
+function deleteStar(id){
+  state.stars=state.stars.filter(x=>x.id!==id);
+  state.lines=state.lines.filter(l=>l.from!==id && l.to!==id);
+  if(editingId===id){ editingId=null; stTitle.value=""; stNote.value=""; stTag.value="";
+    document.getElementById("edit-hint").style.display="none";
+    document.getElementById("btn-add-star").textContent="＋ 星を追加"; }
+  save(); renderStarList();
+}
+function renderStarList(){
+  const list=document.getElementById("star-list");
+  if(!state.stars.length){ list.innerHTML=`<div class="empty-note">まだ星がありません。上のフォームから書き出してみましょう。</div>`; }
+  else{
+    list.innerHTML=state.stars.map(s=>{
+      const col=tagColor(s.tag);
+      const chip=s.tag?`<span class="chip" style="color:${col}">${esc(s.tag==="?"?"？":s.tag)}</span>`:"";
+      const note=s.note?`<div class="st-note">${esc(s.note)}</div>`:"";
+      return `<div class="star-item">
+        <div class="glyph" style="color:${col}">${tagGlyph(s.tag)}</div>
+        <div class="body"><div class="st-title">${esc(s.title)}</div>${note}${chip}</div>
+        <div class="st-actions">
+          <div class="icon-btn" data-edit="${s.id}" title="編集">✎</div>
+          <div class="icon-btn del" data-del="${s.id}" title="削除">✕</div>
+        </div></div>`;
+    }).join("");
+    list.querySelectorAll("[data-edit]").forEach(b=>b.addEventListener("click",()=>editStar(b.dataset.edit)));
+    list.querySelectorAll("[data-del]").forEach(b=>b.addEventListener("click",()=>deleteStar(b.dataset.del)));
+  }
+  const n=state.stars.length;
+  document.getElementById("star-count").textContent=n;
+  const msg=document.getElementById("count-msg");
+  if(n<5) msg.textContent=`（あと${5-n}個で次に進めます）`;
+  else if(n<10) msg.textContent="（もう少し書き出すと、つながりが見えやすくなります）";
+  else msg.textContent="✨ いい感じ！";
+  document.getElementById("to-map").disabled = n<5;
+}
+document.getElementById("to-map").addEventListener("click",()=>{ show(3); });
+
+/* ---------- SHARED STAGE RENDERER ---------- */
+let selectedStar=null;   // for connect mode
+let selectedLine=null;   // line id
+
+function starById(id){ return state.stars.find(s=>s.id===id); }
+
+function drawStage(svg, mode){
+  while(svg.firstChild) svg.removeChild(svg.firstChild);
+
+  // defs (glow gradients per used color + filter)
+  const defs=document.createElementNS(SVGNS,"defs");
+  const colors=new Set(state.stars.map(s=>tagColor(s.tag))); colors.add("#fff3d6");
+  let gi=0; const gradMap={};
+  colors.forEach(c=>{
+    const id="glow"+(gi++); gradMap[c]=id;
+    const rg=document.createElementNS(SVGNS,"radialGradient");
+    rg.setAttribute("id",id);
+    rg.innerHTML=`<stop offset="0%" stop-color="${c}" stop-opacity="0.95"/>
+      <stop offset="35%" stop-color="${c}" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="${c}" stop-opacity="0"/>`;
+    defs.appendChild(rg);
+  });
+  svg.appendChild(defs);
+
+  // lines first
+  const lineLayer=document.createElementNS(SVGNS,"g");
+  lineLayer.setAttribute("class","line-layer");
+  svg.appendChild(lineLayer);
+  state.lines.forEach(l=>{
+    const a=starById(l.from), b=starById(l.to); if(!a||!b) return;
+    const sel = selectedLine===l.id;
+    // hit area (wide, transparent) for tapping
+    if(mode==="connect"){
+      const hit=document.createElementNS(SVGNS,"line");
+      hit.setAttribute("x1",a.x);hit.setAttribute("y1",a.y);hit.setAttribute("x2",b.x);hit.setAttribute("y2",b.y);
+      hit.setAttribute("stroke","transparent");hit.setAttribute("stroke-width","20");hit.style.cursor="pointer";
+      hit.dataset.from=l.from; hit.dataset.to=l.to;
+      hit.addEventListener("click",ev=>{ ev.stopPropagation(); selectLine(l.id); });
+      lineLayer.appendChild(hit);
+    }
+    const ln=document.createElementNS(SVGNS,"line");
+    ln.setAttribute("x1",a.x);ln.setAttribute("y1",a.y);ln.setAttribute("x2",b.x);ln.setAttribute("y2",b.y);
+    ln.setAttribute("stroke", sel? "#ffd98a" : "rgba(255,221,160,.5)");
+    ln.setAttribute("stroke-width", sel? 2.6 : 1.6);
+    ln.setAttribute("stroke-linecap","round");
+    ln.dataset.from=l.from; ln.dataset.to=l.to;
+    ln.style.pointerEvents="none";
+    lineLayer.appendChild(ln);
+    if(l.label){
+      const tx=document.createElementNS(SVGNS,"text");
+      tx.setAttribute("x",(a.x+b.x)/2); tx.setAttribute("y",(a.y+b.y)/2-6);
+      tx.setAttribute("text-anchor","middle"); tx.setAttribute("class","line-label");
+      tx.dataset.from=l.from; tx.dataset.to=l.to;
+      tx.textContent=l.label; lineLayer.appendChild(tx);
+    }
+  });
+
+  // stars
+  state.stars.forEach((s,idx)=>{
+    const col=tagColor(s.tag);
+    const g=document.createElementNS(SVGNS,"g");
+    g.setAttribute("class","star-g"); g.setAttribute("transform",`translate(${s.x},${s.y})`);
+    g.dataset.id=s.id;
+    const isSel = selectedStar===s.id;
+
+    const glow=document.createElementNS(SVGNS,"circle");
+    glow.setAttribute("r","34"); glow.setAttribute("fill",`url(#${gradMap[col]})`);
+    glow.setAttribute("class","twinkle"); glow.style.setProperty("--tw",(2+(idx%5)*0.4)+"s");
+    glow.style.pointerEvents="none";
+    g.appendChild(glow);
+
+    if(isSel){
+      const ring=document.createElementNS(SVGNS,"circle");
+      ring.setAttribute("r","22"); ring.setAttribute("fill","none");
+      ring.setAttribute("stroke","#ffd98a"); ring.setAttribute("stroke-width","2"); ring.setAttribute("stroke-dasharray","4 5");
+      ring.style.pointerEvents="none";
+      const an=document.createElementNS(SVGNS,"animateTransform");
+      an.setAttribute("attributeName","transform");an.setAttribute("type","rotate");
+      an.setAttribute("from","0 0 0");an.setAttribute("to","360 0 0");an.setAttribute("dur","8s");an.setAttribute("repeatCount","indefinite");
+      ring.appendChild(an); g.appendChild(ring);
+    }
+    // sparkle
+    const spk=document.createElementNS(SVGNS,"path");
+    spk.setAttribute("d","M0 -13 L3 -3 L13 0 L3 3 L0 13 L-3 3 L-13 0 L-3 -3 Z");
+    spk.setAttribute("fill",col); spk.style.pointerEvents="none";
+    spk.setAttribute("filter","");
+    g.appendChild(spk);
+    const core=document.createElementNS(SVGNS,"circle");
+    core.setAttribute("r","3.4"); core.setAttribute("fill","#fffdf5"); core.style.pointerEvents="none";
+    g.appendChild(core);
+
+    // label
+    const tx=document.createElementNS(SVGNS,"text");
+    tx.setAttribute("x","0"); tx.setAttribute("y","30"); tx.setAttribute("text-anchor","middle");
+    tx.setAttribute("class","star-label"); tx.textContent=s.title;
+    g.appendChild(tx);
+
+    // big invisible hit circle for easy touch
+    const hit=document.createElementNS(SVGNS,"circle");
+    hit.setAttribute("r","26"); hit.setAttribute("fill","transparent");
+    g.insertBefore(hit, glow);
+
+    if(mode!=="view") attachStarInteraction(svg,g,s,mode);
+    svg.appendChild(g);
+  });
+
+  // background tap to deselect (connect mode)
+  if(mode==="connect"){
+    svg.onclick=(e)=>{ if(e.target===svg){ selectedStar=null; selectedLine=null; closeLinePanel(); refreshConnect(); } };
+  } else svg.onclick=null;
+}
+
+function refreshConnect(){ drawStage(document.getElementById("svg-connect"),"connect"); }
+
+/* drag + tap interaction */
+function attachStarInteraction(svg,g,star,mode){
+  let moved=false, startX=0, startY=0, offX=0, offY=0, pid=null;
+  function toSvg(cx,cy){ const pt=svg.createSVGPoint(); pt.x=cx; pt.y=cy;
+    const m=svg.getScreenCTM(); if(!m) return {x:cx,y:cy};
+    const p=pt.matrixTransform(m.inverse()); return {x:p.x,y:p.y}; }
+  function onMove(e){
+    const p=toSvg(e.clientX,e.clientY);
+    const dx=Math.abs(e.clientX-startX), dy=Math.abs(e.clientY-startY);
+    if(dx+dy>5) moved=true;
+    if(moved){
+      star.x=Math.max(20,Math.min(VB_W-20,p.x-offX));
+      star.y=Math.max(20,Math.min(VB_H-20,p.y-offY));
+      g.setAttribute("transform",`translate(${star.x},${star.y})`);
+      updateLinesFor(svg,star.id);
+    }
+  }
+  function onUp(e){
+    g.classList.remove("dragging");
+    window.removeEventListener("pointermove",onMove);
+    window.removeEventListener("pointerup",onUp);
+    if(moved){ save(); }
+    else { handleTap(star,mode); }
+    pid=null;
+  }
+  g.addEventListener("pointerdown",e=>{
+    e.preventDefault(); moved=false; startX=e.clientX; startY=e.clientY; pid=e.pointerId;
+    const p=toSvg(e.clientX,e.clientY); offX=p.x-star.x; offY=p.y-star.y;
+    g.classList.add("dragging");
+    window.addEventListener("pointermove",onMove);
+    window.addEventListener("pointerup",onUp);
+  });
+}
+function updateLinesFor(svg,starId){
+  // move only the line/label endpoints touching the dragged star — no full rebuild
+  svg.querySelectorAll('.line-layer line, .line-layer text').forEach(el=>{
+    const f=el.dataset.from, t=el.dataset.to;
+    if(f!==starId && t!==starId) return;
+    const a=starById(f), b=starById(t); if(!a||!b) return;
+    if(el.tagName.toLowerCase()==="text"){
+      el.setAttribute("x",(a.x+b.x)/2); el.setAttribute("y",(a.y+b.y)/2-6);
+    } else {
+      el.setAttribute("x1",a.x); el.setAttribute("y1",a.y);
+      el.setAttribute("x2",b.x); el.setAttribute("y2",b.y);
+    }
+  });
+}
+
+/* tap handling for connect mode */
+function handleTap(star,mode){
+  if(mode!=="connect") return;
+  selectedLine=null; closeLinePanel();
+  if(selectedStar===null){
+    selectedStar=star.id; refreshConnect();
+    document.getElementById("connect-hint").textContent="もう1つの星をタップ → 線がつながる";
+  } else if(selectedStar===star.id){
+    selectedStar=null; refreshConnect();
+    document.getElementById("connect-hint").textContent="星をタップして1つ選ぶ → もう1つで線";
+  } else {
+    // create line if not exists
+    const a=selectedStar, b=star.id;
+    const exists=state.lines.some(l=>(l.from===a&&l.to===b)||(l.from===b&&l.to===a));
+    if(!exists){ const nl={id:uid("l"),from:a,to:b,label:""}; state.lines.push(nl); save(); selectedLine=nl.id; }
+    selectedStar=null; refreshConnect(); updateLineCount();
+    document.getElementById("connect-hint").textContent="星をタップして1つ選ぶ → もう1つで線";
+    if(!exists) openLinePanel(selectedLine, true);
+  }
+}
+
+/* line panel */
+function selectLine(id){ selectedLine=id; selectedStar=null; refreshConnect(); openLinePanel(id,false); }
+function openLinePanel(id, isNew){
+  const l=state.lines.find(x=>x.id===id); if(!l) return;
+  const a=starById(l.from), b=starById(l.to);
+  document.getElementById("lp-head").textContent=`「${a?a.title:"?"}」 ✦ 「${b?b.title:"?"}」`;
+  document.getElementById("lp-label").value=l.label||"";
+  const panel=document.getElementById("line-panel"); panel.classList.add("show");
+  panel.scrollIntoView({behavior:"smooth",block:"nearest"});
+  if(isNew) setTimeout(()=>document.getElementById("lp-label").focus(),200);
+}
+function closeLinePanel(){ document.getElementById("line-panel").classList.remove("show"); }
+document.getElementById("lp-save").addEventListener("click",()=>{
+  const l=state.lines.find(x=>x.id===selectedLine); if(l){ l.label=document.getElementById("lp-label").value.trim(); save(); refreshConnect(); toast("メモを保存しました"); }
+});
+document.getElementById("lp-del").addEventListener("click",()=>{
+  state.lines=state.lines.filter(x=>x.id!==selectedLine); selectedLine=null; save(); closeLinePanel(); refreshConnect(); updateLineCount(); toast("線を消しました");
+});
+document.getElementById("lp-close").addEventListener("click",()=>{ selectedLine=null; closeLinePanel(); refreshConnect(); });
+document.getElementById("lp-label").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); document.getElementById("lp-save").click(); }});
+function updateLineCount(){ document.getElementById("line-count").textContent=state.lines.length; }
+
+/* ---------- STEP 5 ---------- */
+const inCname=document.getElementById("in-cname"), inReason=document.getElementById("in-reason");
+inCname.value=state.constellationName; inReason.value=state.namingReason;
+function checkName(){ document.getElementById("to-wobble").disabled = !(inCname.value.trim() && inReason.value.trim()); }
+inCname.addEventListener("input",()=>{ state.constellationName=inCname.value; save(); checkName(); });
+inReason.addEventListener("input",()=>{ state.namingReason=inReason.value; save(); checkName(); });
+checkName();
+document.getElementById("to-wobble").addEventListener("click",()=>{
+  state.constellationName=inCname.value.trim(); state.namingReason=inReason.value.trim(); save();
+  const w=document.getElementById("in-wobble"); w.value=state.wobble||""; show(6);
+});
+
+/* ---------- STEP 6 ---------- */
+document.getElementById("in-wobble").addEventListener("input",e=>{ state.wobble=e.target.value; save(); });
+document.getElementById("to-result").addEventListener("click",()=>{
+  state.wobble=document.getElementById("in-wobble").value.trim();
+  if(!state.createdAt) state.createdAt=new Date().toISOString();
+  save(); show(7);
+});
+
+/* ---------- STEP 7: result ---------- */
+function fmtDate(iso){ const d=iso?new Date(iso):new Date();
+  return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; }
+function renderResult(){
+  document.getElementById("r-name").textContent=state.constellationName||"（名前なし）";
+  const meta=[state.name, state.className, state.number?("№"+state.number):""].filter(Boolean).join(" ・ ");
+  document.getElementById("r-meta").textContent=`${meta}　／　${fmtDate(state.createdAt)}`;
+  document.getElementById("r-reason").textContent=state.namingReason||"─";
+  drawStage(document.getElementById("svg-result"),"view");
+
+  document.getElementById("r-stars").innerHTML = state.stars.map(s=>{
+    const col=tagColor(s.tag);
+    const chip=s.tag?` <span class="chip" style="color:${col}">${esc(s.tag==="?"?"？":s.tag)}</span>`:"";
+    const note=s.note?`<div class="rn">${esc(s.note)}</div>`:"";
+    return `<li><span class="rt" style="color:${col}">✦ ${esc(s.title)}</span>${chip}${note}</li>`;
+  }).join("") || `<li class="rn">星がありません</li>`;
+
+  const lh=state.lines.map(l=>{
+    const a=starById(l.from), b=starById(l.to); if(!a||!b) return "";
+    const why=l.label?`<span class="why">— ${esc(l.label)}</span>`:"";
+    return `<li><div class="rel-line"><span class="rt">${esc(a.title)}</span><span class="arrow">✦—✦</span><span class="rt">${esc(b.title)}</span>${why}</div></li>`;
+  }).filter(Boolean).join("");
+  document.getElementById("r-lines").innerHTML = lh || `<li class="rn">まだ線がありません</li>`;
+
+  const wh=document.getElementById("r-wobble-h"), wb=document.getElementById("r-wobble");
+  if(state.wobble){ wh.style.display="flex"; wb.style.display="block"; wb.textContent=state.wobble; }
+  else { wh.style.display="none"; wb.style.display="none"; }
+}
+
+/* ---------- PNG export (manual canvas render) ---------- */
+function hexA(hex,a){ const h=hex.replace("#",""); const n=h.length===3? h.split("").map(c=>c+c).join(""):h;
+  const r=parseInt(n.slice(0,2),16),g=parseInt(n.slice(2,4),16),b=parseInt(n.slice(4,6),16); return `rgba(${r},${g},${b},${a})`; }
+function exportPNG(){
+  const scale=1.7, W=VB_W*scale, H=VB_H*scale;
+  const cv=document.createElement("canvas"); cv.width=W; cv.height=H;
+  const ctx=cv.getContext("2d");
+  // bg gradient
+  const grad=ctx.createLinearGradient(0,0,W,H);
+  grad.addColorStop(0,"#0a1128"); grad.addColorStop(.5,"#141a3a"); grad.addColorStop(1,"#1d1147");
+  ctx.fillStyle=grad; ctx.fillRect(0,0,W,H);
+  const rg=ctx.createRadialGradient(W*0.78,-H*0.1,0,W*0.78,-H*0.1,W*0.7);
+  rg.addColorStop(0,"rgba(122,90,200,.30)"); rg.addColorStop(1,"rgba(122,90,200,0)");
+  ctx.fillStyle=rg; ctx.fillRect(0,0,W,H);
+  // dust
+  for(let i=0;i<160;i++){ ctx.globalAlpha=Math.random()*0.6+0.1; ctx.fillStyle="#fff";
+    const r=Math.random()*1.6*scale; ctx.beginPath(); ctx.arc(Math.random()*W,Math.random()*H,r,0,7); ctx.fill(); }
+  ctx.globalAlpha=1;
+  // lines
+  state.lines.forEach(l=>{ const a=starById(l.from),b=starById(l.to); if(!a||!b)return;
+    ctx.strokeStyle="rgba(255,221,160,.55)"; ctx.lineWidth=1.6*scale; ctx.lineCap="round";
+    ctx.beginPath(); ctx.moveTo(a.x*scale,a.y*scale); ctx.lineTo(b.x*scale,b.y*scale); ctx.stroke();
+    if(l.label){ ctx.fillStyle="rgba(247,232,194,.95)"; ctx.font=`${13*scale}px 'M PLUS Rounded 1c',sans-serif`;
+      ctx.textAlign="center"; ctx.fillText(l.label,(a.x+b.x)/2*scale,((a.y+b.y)/2-6)*scale); }
+  });
+  // stars
+  state.stars.forEach(s=>{
+    const x=s.x*scale,y=s.y*scale, col=tagColor(s.tag);
+    const g2=ctx.createRadialGradient(x,y,0,x,y,34*scale);
+    g2.addColorStop(0,hexA(col,.9)); g2.addColorStop(.35,hexA(col,.32)); g2.addColorStop(1,hexA(col,0));
+    ctx.fillStyle=g2; ctx.beginPath(); ctx.arc(x,y,34*scale,0,7); ctx.fill();
+    // sparkle
+    ctx.fillStyle=col; ctx.beginPath();
+    const pts=[[0,-13],[3,-3],[13,0],[3,3],[0,13],[-3,3],[-13,0],[-3,-3]];
+    pts.forEach((p,i)=>{ const px=x+p[0]*scale, py=y+p[1]*scale; i?ctx.lineTo(px,py):ctx.moveTo(px,py); });
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle="#fffdf5"; ctx.beginPath(); ctx.arc(x,y,3.4*scale,0,7); ctx.fill();
+    // label
+    ctx.font=`500 ${15*scale}px 'M PLUS Rounded 1c',sans-serif`; ctx.textAlign="center";
+    ctx.lineWidth=3*scale; ctx.strokeStyle="rgba(8,10,30,.85)"; ctx.lineJoin="round";
+    ctx.strokeText(s.title,x,y+30*scale); ctx.fillStyle="#eef0ff"; ctx.fillText(s.title,x,y+30*scale);
+  });
+  // title + footer
+  ctx.textAlign="center";
+  ctx.font=`800 ${30*scale}px 'M PLUS Rounded 1c',sans-serif`;
+  ctx.fillStyle="rgba(255,217,138,.95)"; ctx.shadowColor="rgba(255,217,138,.5)"; ctx.shadowBlur=18*scale;
+  ctx.fillText(state.constellationName||"", W/2, 46*scale); ctx.shadowBlur=0;
+  ctx.font=`${13*scale}px 'M PLUS Rounded 1c',sans-serif`; ctx.fillStyle="rgba(149,157,206,.9)";
+  ctx.fillText(`学校生活の星座  ─  ${state.name||""}  ・  ${fmtDate(state.createdAt)}`, W/2, H-16*scale);
+
+  cv.toBlob(blob=>{
+    const url=URL.createObjectURL(blob); const a=document.createElement("a");
+    a.href=url; a.download=`星座_${(state.constellationName||"my")}.png`; a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),1000); toast("画像を保存しました ★");
+  },"image/png");
+}
+document.getElementById("btn-png").addEventListener("click",()=>{
+  if(document.fonts&&document.fonts.ready){ document.fonts.ready.then(exportPNG); } else exportPNG();
+});
+document.getElementById("btn-print").addEventListener("click",()=>window.print());
+document.getElementById("btn-copy").addEventListener("click",()=>{
+  let t=`★ ${state.constellationName||"（名前なし）"}\n`;
+  t+=`${[state.name,state.className,state.number].filter(Boolean).join(" / ")}  ${fmtDate(state.createdAt)}\n\n`;
+  t+=`【命名理由】\n${state.namingReason||"-"}\n\n【星のリスト】\n`;
+  state.stars.forEach(s=>{ t+=`・${s.title}${s.tag?`（${s.tag}）`:""}${s.note?` — ${s.note}`:""}\n`; });
+  t+=`\n【つながり】\n`;
+  state.lines.forEach(l=>{ const a=starById(l.from),b=starById(l.to); if(a&&b) t+=`・${a.title} ✦ ${b.title}${l.label?`（${l.label}）`:""}\n`; });
+  if(state.wobble) t+=`\n【揺り戻しメモ】\n${state.wobble}\n`;
+  navigator.clipboard?.writeText(t).then(()=>toast("コピーしました"),()=>toast("コピーできませんでした"));
+});
+document.getElementById("btn-restart").addEventListener("click",()=>{
+  if(confirm("すべての星と線が消えます。最初からやり直しますか？")){
+    try{ localStorage.removeItem(KEY); }catch(e){}
+    state=blankState(); editingId=null; selectedStar=null; selectedLine=null;
+    inName.value=inClass.value=inNum.value=""; inCname.value=inReason.value="";
+    document.getElementById("in-wobble").value="";
+    renderStarList(); checkName(); show(1);
+  }
+});
+
+/* ---------- utils ---------- */
+function esc(s){ return (s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+let toastT=null;
+function toast(msg){ const el=document.getElementById("toast"); el.textContent=msg; el.classList.add("show");
+  clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove("show"),2200); }
+
+/* ---------- boot ---------- */
+renderStarList();
+show(state.step || 1);
+</script>
+</body>
+</html>
