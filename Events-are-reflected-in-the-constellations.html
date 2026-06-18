@@ -106,6 +106,24 @@
   /* star editor */
   .add-grid{display:grid; grid-template-columns:1fr 130px; gap:10px;}
   @media(max-width:560px){ .add-grid{grid-template-columns:1fr;} }
+
+  /* tag presets + color palette + size picker */
+  .tag-presets{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;}
+  .preset-chip{cursor:pointer; padding:4px 11px; border-radius:99px; border:1px solid currentColor; font-size:12px; background:transparent; font-family:inherit; transition:.15s; display:inline-flex; align-items:center; gap:4px;}
+  .preset-chip:hover{background:rgba(255,255,255,.06); transform:translateY(-1px);}
+  .preset-chip.active{background:rgba(255,217,138,.12); box-shadow:0 0 12px -2px currentColor;}
+  .color-row{display:flex; align-items:center; gap:10px; margin-top:9px; flex-wrap:wrap;}
+  .color-row-label{font-size:12px; color:var(--muted); flex:none;}
+  .color-palette{display:flex; gap:6px; flex-wrap:wrap;}
+  .color-swatch{cursor:pointer; width:24px; height:24px; border-radius:50%; border:2px solid transparent; padding:0; transition:.15s; position:relative;}
+  .color-swatch:hover{transform:scale(1.15);}
+  .color-swatch.active{border-color:#fff; box-shadow:0 0 0 1px rgba(0,0,0,.5), 0 0 12px currentColor;}
+  .size-picker{display:flex; gap:8px; margin-top:6px;}
+  .size-btn{flex:1; cursor:pointer; padding:9px 6px; border-radius:11px; background:rgba(8,12,32,.55); border:1px solid var(--border); color:var(--text); font-family:inherit; font-size:13.5px; font-weight:500; transition:.15s; display:flex; flex-direction:column; align-items:center; gap:2px; line-height:1;}
+  .size-btn .sz-ico{color:var(--gold); line-height:1; filter:drop-shadow(0 0 4px currentColor);}
+  .size-btn:hover{border-color:var(--border-bright);}
+  .size-btn.active{border-color:var(--border-bright); background:rgba(255,217,138,.12); color:var(--gold-soft);}
+
   .star-list{display:flex; flex-direction:column; gap:9px; margin-top:14px;}
   .star-item{display:flex; gap:11px; align-items:flex-start; background:var(--panel-2); border:1px solid var(--border); border-radius:13px; padding:11px 13px; transition:.18s;}
   .star-item:hover{border-color:var(--border-bright);}
@@ -217,18 +235,24 @@
       <div class="promise"><span class="ic">☄</span><span>整理しなくてOK。順番も気にしないで、とにかく頭に浮かんだものを書き出してみましょう。</span></div>
 
       <label class="fld">星のタイトル <span style="color:var(--danger)">*</span> <span class="opt">（15文字くらい）</span></label>
-      <div class="add-grid">
-        <input type="text" id="st-title" placeholder="例：部活で先輩とぶつかった" maxlength="40" autocomplete="off">
-        <select id="st-tag">
-          <option value="">タグなし</option>
-          <option value="部活">部活</option>
-          <option value="授業">授業</option>
-          <option value="友人">友人</option>
-          <option value="家">家</option>
-          <option value="自分">自分</option>
-          <option value="?">？ もやもや</option>
-        </select>
+      <input type="text" id="st-title" placeholder="例：部活で先輩とぶつかった" maxlength="40" autocomplete="off">
+
+      <label class="fld">タグ <span class="opt">（自由・任意。好きな言葉でOK）</span></label>
+      <input type="text" id="st-tag" placeholder="例：部活 / 自分で決めた言葉でも◎" maxlength="14" autocomplete="off" list="tag-suggest">
+      <datalist id="tag-suggest"></datalist>
+      <div class="tag-presets" id="tag-presets"></div>
+      <div class="color-row">
+        <span class="color-row-label">色：</span>
+        <div class="color-palette" id="color-palette"></div>
       </div>
+
+      <label class="fld">星の大きさ</label>
+      <div class="size-picker" id="size-picker">
+        <button type="button" class="size-btn" data-size="1"><span class="sz-ico" style="font-size:12px">✦</span>小</button>
+        <button type="button" class="size-btn active" data-size="2"><span class="sz-ico" style="font-size:16px">✦</span>中</button>
+        <button type="button" class="size-btn" data-size="3"><span class="sz-ico" style="font-size:22px">✦</span>大</button>
+      </div>
+
       <label class="fld">詳細メモ <span class="opt">（任意・自由記述）</span></label>
       <textarea id="st-note" placeholder="どんな気持ちだった？ 何があった？ 思いつくままに。"></textarea>
       <div class="btn-row"><button class="btn sm" id="btn-add-star">＋ 星を追加</button><span id="edit-hint" style="color:var(--muted); font-size:12.5px; display:none;">編集中… 追加すると更新されます</span></div>
@@ -314,6 +338,7 @@
         <svg class="stage" id="svg-result" viewBox="0 0 1000 680" preserveAspectRatio="xMidYMid meet"></svg>
       </div>
       <div class="btn-row no-print">
+        <button class="btn ghost sm" data-go="6">← もどる</button>
         <button class="btn sm" id="btn-png">★ 星座を画像で保存</button>
         <button class="btn ghost sm" id="btn-print">印刷 / PDF保存</button>
         <button class="btn ghost sm" id="btn-copy">テキストでコピー</button>
@@ -344,13 +369,39 @@ const SVGNS="http://www.w3.org/2000/svg";
 const VB_W=1000, VB_H=680;
 const KEY="seiza-app-v1";
 
-const TAGS={
-  "部活":{c:"#ffcf6b",g:"🏐"}, "授業":{c:"#86b6ff",g:"📖"}, "友人":{c:"#ff9ec9",g:"💬"},
-  "家":{c:"#8fe6ac",g:"🏠"}, "自分":{c:"#c8a4ff",g:"🌙"}, "?":{c:"#dfe5ff",g:"❓"},
-  "":{c:"#fff3d6",g:"✦"}
-};
-function tagColor(t){ return (TAGS[t]||TAGS[""]).c; }
-function tagGlyph(t){ return (TAGS[t]||TAGS[""]).g; }
+const TAG_PRESETS=[
+  {name:"部活", color:"#ffcf6b", glyph:"🏐"},
+  {name:"授業", color:"#86b6ff", glyph:"📖"},
+  {name:"友人", color:"#ff9ec9", glyph:"💬"},
+  {name:"家",   color:"#8fe6ac", glyph:"🏠"},
+  {name:"自分", color:"#c8a4ff", glyph:"🌙"},
+  {name:"?",    color:"#dfe5ff", glyph:"❓", labelDisp:"？ もやもや"}
+];
+const COLOR_PALETTE=["#ffcf6b","#86b6ff","#ff9ec9","#8fe6ac","#c8a4ff","#ffa178","#7df3d2","#dfe5ff"];
+const DEFAULT_COLOR="#fff3d6";
+const DEFAULT_GLYPH="✦";
+const SIZE_SCALE={1:0.72, 2:1.0, 3:1.42};
+
+function presetOf(name){ return TAG_PRESETS.find(p=>p.name===name); }
+function hashColor(s){
+  if(!s) return DEFAULT_COLOR;
+  let h=0; for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))|0;
+  return COLOR_PALETTE[Math.abs(h)%COLOR_PALETTE.length];
+}
+function autoColor(tag){
+  const p=presetOf(tag); if(p) return p.color;
+  return tag ? hashColor(tag) : DEFAULT_COLOR;
+}
+function starColor(s){ return s.color || autoColor(s.tag); }
+function starGlyph(s){
+  const p=presetOf(s.tag); if(p) return p.glyph;
+  return DEFAULT_GLYPH;
+}
+function starScale(s){ return SIZE_SCALE[s.size||2] || 1.0; }
+function tagDisplay(t){
+  const p=presetOf(t); if(p && t==="?") return "？";
+  return t;
+}
 
 let state=load();
 
@@ -359,7 +410,15 @@ function blankState(){
     constellationName:"",namingReason:"",wobble:"",createdAt:null,_idc:1};
 }
 function load(){
-  try{ const raw=localStorage.getItem(KEY); if(raw){ const s=JSON.parse(raw); return Object.assign(blankState(),s);} }catch(e){}
+  try{ const raw=localStorage.getItem(KEY); if(raw){
+    const s=JSON.parse(raw); const st=Object.assign(blankState(),s);
+    // migrate: ensure each star has size + color
+    st.stars.forEach(star=>{
+      if(!star.size) star.size=2;
+      if(!star.color) star.color=autoColor(star.tag);
+    });
+    return st;
+  } }catch(e){}
   return blankState();
 }
 function save(){ try{ localStorage.setItem(KEY,JSON.stringify(state)); }catch(e){} }
@@ -417,26 +476,87 @@ document.getElementById("btn-start").addEventListener("click",()=>{
 /* ---------- STEP 2: star editor ---------- */
 const stTitle=document.getElementById("st-title"), stTag=document.getElementById("st-tag"), stNote=document.getElementById("st-note");
 let editingId=null;
+let currentColor="";    // "" = auto from tag
+let currentSize=2;
+let colorManuallySet=false;
+
 function rnd(min,max){ return Math.random()*(max-min)+min; }
+function effectiveColor(){ return currentColor || autoColor(stTag.value.trim()); }
+
+function renderTagPresets(){
+  const host=document.getElementById("tag-presets");
+  host.innerHTML=TAG_PRESETS.map(p=>{
+    const active = stTag.value.trim()===p.name ? " active":"";
+    const label = p.labelDisp || p.name;
+    return `<button type="button" class="preset-chip${active}" data-preset="${esc(p.name)}" style="color:${p.color}">${esc(label)}</button>`;
+  }).join("");
+  host.querySelectorAll("[data-preset]").forEach(b=>b.addEventListener("click",()=>{
+    const name=b.dataset.preset; stTag.value=name;
+    const p=presetOf(name); if(p){ currentColor=p.color; colorManuallySet=true; }
+    renderTagPresets(); renderColorPalette(); refreshDatalist();
+  }));
+}
+function renderColorPalette(){
+  const host=document.getElementById("color-palette");
+  const eff=effectiveColor();
+  host.innerHTML=COLOR_PALETTE.map(c=>{
+    const active = (c.toLowerCase()===eff.toLowerCase()) ? " active":"";
+    return `<button type="button" class="color-swatch${active}" data-color="${c}" style="background:${c}; color:${c}" title="${c}"></button>`;
+  }).join("");
+  host.querySelectorAll("[data-color]").forEach(b=>b.addEventListener("click",()=>{
+    currentColor=b.dataset.color; colorManuallySet=true; renderColorPalette();
+  }));
+}
+function renderSizePicker(){
+  document.querySelectorAll("#size-picker .size-btn").forEach(b=>{
+    b.classList.toggle("active", +b.dataset.size===currentSize);
+  });
+}
+document.querySelectorAll("#size-picker .size-btn").forEach(b=>{
+  b.addEventListener("click",()=>{ currentSize=+b.dataset.size; renderSizePicker(); });
+});
+function refreshDatalist(){
+  const dl=document.getElementById("tag-suggest");
+  const used=new Set();
+  TAG_PRESETS.forEach(p=>{ if(p.name!=="?") used.add(p.name); });
+  state.stars.forEach(s=>{ if(s.tag) used.add(s.tag); });
+  dl.innerHTML=[...used].map(t=>`<option value="${esc(t)}">`).join("");
+}
+stTag.addEventListener("input",()=>{
+  if(!colorManuallySet){ /* keep auto-color following tag */ renderColorPalette(); }
+  renderTagPresets();
+});
+
+function resetStarForm(){
+  stTitle.value=""; stNote.value=""; stTag.value="";
+  currentColor=""; currentSize=2; colorManuallySet=false;
+  renderTagPresets(); renderColorPalette(); renderSizePicker();
+}
+
 document.getElementById("btn-add-star").addEventListener("click",()=>{
   const t=stTitle.value.trim();
   if(!t){ toast("タイトルを入れてね"); stTitle.focus(); return; }
+  const tag=stTag.value.trim();
+  const color = currentColor || autoColor(tag);
   if(editingId){
     const s=state.stars.find(x=>x.id===editingId);
-    if(s){ s.title=t; s.tag=stTag.value; s.note=stNote.value.trim(); }
+    if(s){ s.title=t; s.tag=tag; s.color=color; s.size=currentSize; s.note=stNote.value.trim(); }
     editingId=null; document.getElementById("edit-hint").style.display="none";
     document.getElementById("btn-add-star").textContent="＋ 星を追加";
   }else{
-    state.stars.push({id:uid("s"),title:t,tag:stTag.value,note:stNote.value.trim(),
+    state.stars.push({id:uid("s"),title:t,tag:tag,color:color,size:currentSize,note:stNote.value.trim(),
       x:rnd(180,820),y:rnd(140,540)});
   }
-  stTitle.value=""; stNote.value=""; stTag.value="";
-  save(); renderStarList(); stTitle.focus();
+  resetStarForm();
+  save(); renderStarList(); refreshDatalist(); stTitle.focus();
 });
 stTitle.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); document.getElementById("btn-add-star").click(); }});
 function editStar(id){
   const s=state.stars.find(x=>x.id===id); if(!s) return;
   stTitle.value=s.title; stTag.value=s.tag||""; stNote.value=s.note||"";
+  currentColor = s.color || ""; colorManuallySet = !!s.color;
+  currentSize = s.size || 2;
+  renderTagPresets(); renderColorPalette(); renderSizePicker();
   editingId=id; document.getElementById("edit-hint").style.display="inline";
   document.getElementById("btn-add-star").textContent="✓ 更新する";
   stTitle.focus(); stTitle.scrollIntoView({behavior:"smooth",block:"center"});
@@ -444,22 +564,28 @@ function editStar(id){
 function deleteStar(id){
   state.stars=state.stars.filter(x=>x.id!==id);
   state.lines=state.lines.filter(l=>l.from!==id && l.to!==id);
-  if(editingId===id){ editingId=null; stTitle.value=""; stNote.value=""; stTag.value="";
+  if(editingId===id){ editingId=null;
     document.getElementById("edit-hint").style.display="none";
-    document.getElementById("btn-add-star").textContent="＋ 星を追加"; }
-  save(); renderStarList();
+    document.getElementById("btn-add-star").textContent="＋ 星を追加";
+    resetStarForm();
+  }
+  save(); renderStarList(); refreshDatalist();
 }
 function renderStarList(){
   const list=document.getElementById("star-list");
   if(!state.stars.length){ list.innerHTML=`<div class="empty-note">まだ星がありません。上のフォームから書き出してみましょう。</div>`; }
   else{
     list.innerHTML=state.stars.map(s=>{
-      const col=tagColor(s.tag);
-      const chip=s.tag?`<span class="chip" style="color:${col}">${esc(s.tag==="?"?"？":s.tag)}</span>`:"";
+      const col=starColor(s);
+      const sz=s.size||2;
+      const glyphFs = sz===1 ? 14 : sz===3 ? 22 : 18;
+      const sizeLabel = sz===1?"小":sz===3?"大":"中";
+      const chip=s.tag?`<span class="chip" style="color:${col}">${esc(tagDisplay(s.tag))}</span>`:"";
+      const sizeChip=`<span class="chip" style="color:var(--muted); border-color:var(--border); margin-left:5px">サイズ：${sizeLabel}</span>`;
       const note=s.note?`<div class="st-note">${esc(s.note)}</div>`:"";
       return `<div class="star-item">
-        <div class="glyph" style="color:${col}">${tagGlyph(s.tag)}</div>
-        <div class="body"><div class="st-title">${esc(s.title)}</div>${note}${chip}</div>
+        <div class="glyph" style="color:${col}; font-size:${glyphFs}px">${starGlyph(s)}</div>
+        <div class="body"><div class="st-title">${esc(s.title)}</div>${note}<div>${chip}${sizeChip}</div></div>
         <div class="st-actions">
           <div class="icon-btn" data-edit="${s.id}" title="編集">✎</div>
           <div class="icon-btn del" data-del="${s.id}" title="削除">✕</div>
@@ -489,7 +615,7 @@ function drawStage(svg, mode){
 
   // defs (glow gradients per used color + filter)
   const defs=document.createElementNS(SVGNS,"defs");
-  const colors=new Set(state.stars.map(s=>tagColor(s.tag))); colors.add("#fff3d6");
+  const colors=new Set(state.stars.map(s=>starColor(s))); colors.add(DEFAULT_COLOR);
   let gi=0; const gradMap={};
   colors.forEach(c=>{
     const id="glow"+(gi++); gradMap[c]=id;
@@ -537,21 +663,22 @@ function drawStage(svg, mode){
 
   // stars
   state.stars.forEach((s,idx)=>{
-    const col=tagColor(s.tag);
+    const col=starColor(s);
+    const sc=starScale(s);
     const g=document.createElementNS(SVGNS,"g");
     g.setAttribute("class","star-g"); g.setAttribute("transform",`translate(${s.x},${s.y})`);
     g.dataset.id=s.id;
     const isSel = selectedStar===s.id;
 
     const glow=document.createElementNS(SVGNS,"circle");
-    glow.setAttribute("r","34"); glow.setAttribute("fill",`url(#${gradMap[col]})`);
+    glow.setAttribute("r",(34*sc).toFixed(2)); glow.setAttribute("fill",`url(#${gradMap[col]})`);
     glow.setAttribute("class","twinkle"); glow.style.setProperty("--tw",(2+(idx%5)*0.4)+"s");
     glow.style.pointerEvents="none";
     g.appendChild(glow);
 
     if(isSel){
       const ring=document.createElementNS(SVGNS,"circle");
-      ring.setAttribute("r","22"); ring.setAttribute("fill","none");
+      ring.setAttribute("r",(22*sc).toFixed(2)); ring.setAttribute("fill","none");
       ring.setAttribute("stroke","#ffd98a"); ring.setAttribute("stroke-width","2"); ring.setAttribute("stroke-dasharray","4 5");
       ring.style.pointerEvents="none";
       const an=document.createElementNS(SVGNS,"animateTransform");
@@ -559,25 +686,27 @@ function drawStage(svg, mode){
       an.setAttribute("from","0 0 0");an.setAttribute("to","360 0 0");an.setAttribute("dur","8s");an.setAttribute("repeatCount","indefinite");
       ring.appendChild(an); g.appendChild(ring);
     }
-    // sparkle
+    // sparkle (scaled)
     const spk=document.createElementNS(SVGNS,"path");
-    spk.setAttribute("d","M0 -13 L3 -3 L13 0 L3 3 L0 13 L-3 3 L-13 0 L-3 -3 Z");
+    const pts=[[0,-13],[3,-3],[13,0],[3,3],[0,13],[-3,3],[-13,0],[-3,-3]];
+    const d="M"+pts.map(p=>`${(p[0]*sc).toFixed(2)} ${(p[1]*sc).toFixed(2)}`).join(" L")+" Z";
+    spk.setAttribute("d",d);
     spk.setAttribute("fill",col); spk.style.pointerEvents="none";
-    spk.setAttribute("filter","");
     g.appendChild(spk);
     const core=document.createElementNS(SVGNS,"circle");
-    core.setAttribute("r","3.4"); core.setAttribute("fill","#fffdf5"); core.style.pointerEvents="none";
+    core.setAttribute("r",(3.4*sc).toFixed(2)); core.setAttribute("fill","#fffdf5"); core.style.pointerEvents="none";
     g.appendChild(core);
 
     // label
+    const labelY = 26*sc + 10;
     const tx=document.createElementNS(SVGNS,"text");
-    tx.setAttribute("x","0"); tx.setAttribute("y","30"); tx.setAttribute("text-anchor","middle");
+    tx.setAttribute("x","0"); tx.setAttribute("y",labelY.toFixed(1)); tx.setAttribute("text-anchor","middle");
     tx.setAttribute("class","star-label"); tx.textContent=s.title;
     g.appendChild(tx);
 
-    // big invisible hit circle for easy touch
+    // big invisible hit circle for easy touch (never smaller than 26)
     const hit=document.createElementNS(SVGNS,"circle");
-    hit.setAttribute("r","26"); hit.setAttribute("fill","transparent");
+    hit.setAttribute("r", Math.max(26, 26*sc).toFixed(2)); hit.setAttribute("fill","transparent");
     g.insertBefore(hit, glow);
 
     if(mode!=="view") attachStarInteraction(svg,g,s,mode);
@@ -714,10 +843,13 @@ function renderResult(){
   drawStage(document.getElementById("svg-result"),"view");
 
   document.getElementById("r-stars").innerHTML = state.stars.map(s=>{
-    const col=tagColor(s.tag);
-    const chip=s.tag?` <span class="chip" style="color:${col}">${esc(s.tag==="?"?"？":s.tag)}</span>`:"";
+    const col=starColor(s);
+    const sz=s.size||2;
+    const sizeLabel = sz===1?"小":sz===3?"大":"中";
+    const chip=s.tag?` <span class="chip" style="color:${col}">${esc(tagDisplay(s.tag))}</span>`:"";
+    const sizeChip=` <span class="chip" style="color:var(--muted); border-color:var(--border)">${sizeLabel}</span>`;
     const note=s.note?`<div class="rn">${esc(s.note)}</div>`:"";
-    return `<li><span class="rt" style="color:${col}">✦ ${esc(s.title)}</span>${chip}${note}</li>`;
+    return `<li><span class="rt" style="color:${col}">${starGlyph(s)} ${esc(s.title)}</span>${chip}${sizeChip}${note}</li>`;
   }).join("") || `<li class="rn">星がありません</li>`;
 
   const lh=state.lines.map(l=>{
@@ -759,20 +891,22 @@ function exportPNG(){
   });
   // stars
   state.stars.forEach(s=>{
-    const x=s.x*scale,y=s.y*scale, col=tagColor(s.tag);
-    const g2=ctx.createRadialGradient(x,y,0,x,y,34*scale);
+    const x=s.x*scale,y=s.y*scale, col=starColor(s), sc=starScale(s);
+    const glowR = 34*scale*sc;
+    const g2=ctx.createRadialGradient(x,y,0,x,y,glowR);
     g2.addColorStop(0,hexA(col,.9)); g2.addColorStop(.35,hexA(col,.32)); g2.addColorStop(1,hexA(col,0));
-    ctx.fillStyle=g2; ctx.beginPath(); ctx.arc(x,y,34*scale,0,7); ctx.fill();
+    ctx.fillStyle=g2; ctx.beginPath(); ctx.arc(x,y,glowR,0,7); ctx.fill();
     // sparkle
     ctx.fillStyle=col; ctx.beginPath();
     const pts=[[0,-13],[3,-3],[13,0],[3,3],[0,13],[-3,3],[-13,0],[-3,-3]];
-    pts.forEach((p,i)=>{ const px=x+p[0]*scale, py=y+p[1]*scale; i?ctx.lineTo(px,py):ctx.moveTo(px,py); });
+    pts.forEach((p,i)=>{ const px=x+p[0]*scale*sc, py=y+p[1]*scale*sc; i?ctx.lineTo(px,py):ctx.moveTo(px,py); });
     ctx.closePath(); ctx.fill();
-    ctx.fillStyle="#fffdf5"; ctx.beginPath(); ctx.arc(x,y,3.4*scale,0,7); ctx.fill();
+    ctx.fillStyle="#fffdf5"; ctx.beginPath(); ctx.arc(x,y,3.4*scale*sc,0,7); ctx.fill();
     // label
+    const labelY = y + (26*sc + 10)*scale;
     ctx.font=`500 ${15*scale}px 'M PLUS Rounded 1c',sans-serif`; ctx.textAlign="center";
     ctx.lineWidth=3*scale; ctx.strokeStyle="rgba(8,10,30,.85)"; ctx.lineJoin="round";
-    ctx.strokeText(s.title,x,y+30*scale); ctx.fillStyle="#eef0ff"; ctx.fillText(s.title,x,y+30*scale);
+    ctx.strokeText(s.title,x,labelY); ctx.fillStyle="#eef0ff"; ctx.fillText(s.title,x,labelY);
   });
   // title + footer
   ctx.textAlign="center";
@@ -796,7 +930,10 @@ document.getElementById("btn-copy").addEventListener("click",()=>{
   let t=`★ ${state.constellationName||"（名前なし）"}\n`;
   t+=`${[state.name,state.className,state.number].filter(Boolean).join(" / ")}  ${fmtDate(state.createdAt)}\n\n`;
   t+=`【命名理由】\n${state.namingReason||"-"}\n\n【星のリスト】\n`;
-  state.stars.forEach(s=>{ t+=`・${s.title}${s.tag?`（${s.tag}）`:""}${s.note?` — ${s.note}`:""}\n`; });
+  state.stars.forEach(s=>{
+    const sz=s.size||2; const szLabel=sz===1?"小":sz===3?"大":"中";
+    t+=`・${s.title}${s.tag?`［${tagDisplay(s.tag)}］`:""}（${szLabel}）${s.note?` — ${s.note}`:""}\n`;
+  });
   t+=`\n【つながり】\n`;
   state.lines.forEach(l=>{ const a=starById(l.from),b=starById(l.to); if(a&&b) t+=`・${a.title} ✦ ${b.title}${l.label?`（${l.label}）`:""}\n`; });
   if(state.wobble) t+=`\n【揺り戻しメモ】\n${state.wobble}\n`;
@@ -808,7 +945,8 @@ document.getElementById("btn-restart").addEventListener("click",()=>{
     state=blankState(); editingId=null; selectedStar=null; selectedLine=null;
     inName.value=inClass.value=inNum.value=""; inCname.value=inReason.value="";
     document.getElementById("in-wobble").value="";
-    renderStarList(); checkName(); show(1);
+    resetStarForm();
+    renderStarList(); refreshDatalist(); checkName(); show(1);
   }
 });
 
@@ -819,6 +957,10 @@ function toast(msg){ const el=document.getElementById("toast"); el.textContent=m
   clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove("show"),2200); }
 
 /* ---------- boot ---------- */
+renderTagPresets();
+renderColorPalette();
+renderSizePicker();
+refreshDatalist();
 renderStarList();
 show(state.step || 1);
 </script>
