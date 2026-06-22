@@ -1,0 +1,1917 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>印象操作グラフ プレゼンメーカー</title>
+<style>
+  :root {
+    --primary: #2563eb;
+    --primary-light: #eff6ff;
+    --danger: #dc2626;
+    --danger-light: #fef2f2;
+    --safe: #16a34a;
+    --safe-light: #f0fdf4;
+    --warn: #f59e0b;
+    --bg: #f8fafc;
+    --panel: #ffffff;
+    --border: #e2e8f0;
+    --text: #0f172a;
+    --muted: #64748b;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ===== Header ===== */
+  header.app-header {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    color: white;
+    padding: 10px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,.1);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  header.app-header h1 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    display: inline;
+  }
+  header.app-header .tag {
+    font-size: 0.7rem;
+    background: rgba(255,255,255,.15);
+    padding: 2px 8px;
+    border-radius: 99px;
+    margin-left: 8px;
+    font-weight: 600;
+  }
+  header.app-header .actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  header.app-header button {
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.2);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: background .15s;
+  }
+  header.app-header button:hover { background: rgba(255,255,255,.25); }
+  header.app-header button.primary {
+    background: var(--primary);
+    border-color: var(--primary);
+  }
+  header.app-header button.primary:hover { background: #1d4ed8; }
+
+  /* ===== Slide tabs ===== */
+  .slide-tabs {
+    background: white;
+    border-bottom: 1px solid var(--border);
+    padding: 8px 12px;
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    align-items: center;
+  }
+  .slide-tab {
+    background: #f1f5f9;
+    border: 2px solid transparent;
+    padding: 4px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    transition: all .15s;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: fit-content;
+  }
+  .slide-tab:hover { background: #e2e8f0; }
+  .slide-tab.active {
+    background: var(--primary-light);
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  .slide-tab .icon-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 0 2px;
+    opacity: 0.5;
+    line-height: 1;
+  }
+  .slide-tab .icon-btn:hover { opacity: 1; color: var(--primary); }
+  .slide-tab .icon-btn.del:hover { color: var(--danger); }
+  .slide-tab.add {
+    background: white;
+    border: 2px dashed var(--border);
+    color: var(--muted);
+  }
+  .slide-tab.add:hover { border-color: var(--primary); color: var(--primary); }
+
+  /* ===== Main layout ===== */
+  .main {
+    display: grid;
+    grid-template-columns: 400px 1fr;
+    gap: 16px;
+    padding: 16px;
+    max-width: 1500px;
+    margin: 0 auto;
+  }
+  @media (max-width: 900px) {
+    .main { grid-template-columns: 1fr; }
+    .controls { max-height: none !important; }
+  }
+
+  /* ===== Control panel ===== */
+  .controls {
+    background: var(--panel);
+    border-radius: 12px;
+    padding: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.05);
+    border: 1px solid var(--border);
+    max-height: calc(100vh - 170px);
+    overflow-y: auto;
+  }
+  .ctrl-section {
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px dashed var(--border);
+  }
+  .ctrl-section:last-child { border-bottom: none; margin-bottom: 0; }
+  .ctrl-section h3 {
+    margin: 0 0 8px 0;
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .ctrl-section h3 .badge {
+    background: var(--danger);
+    color: white;
+    font-size: 0.65rem;
+    padding: 1px 6px;
+    border-radius: 99px;
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 700;
+  }
+  .ctrl-section h3 .badge-safe { background: var(--safe); }
+
+  label.field {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+  label.field input[type="text"],
+  label.field input[type="number"],
+  label.field textarea,
+  label.field select {
+    width: 100%;
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font: inherit;
+    font-size: 0.9rem;
+    margin-top: 3px;
+    background: white;
+  }
+  label.field textarea { resize: vertical; min-height: 50px; }
+  label.field input:focus, label.field textarea:focus, label.field select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+  }
+
+  /* ===== Data table ===== */
+  .data-table {
+    width: 100%;
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+    border-collapse: collapse;
+  }
+  .data-table th {
+    text-align: left;
+    font-size: 0.7rem;
+    color: var(--muted);
+    padding: 3px 6px;
+    font-weight: 700;
+  }
+  .data-table td { padding: 2px 4px; }
+  .data-table input[type="text"],
+  .data-table input[type="number"] {
+    width: 100%;
+    padding: 4px 6px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font: inherit;
+    font-size: 0.85rem;
+  }
+  .data-table .vis-cell { width: 24px; text-align: center; }
+  .data-table .vis-cell input[type="checkbox"] { transform: scale(1.1); cursor: pointer; }
+  .data-table .del-cell { width: 24px; text-align: center; }
+  .data-table .del-cell button {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0;
+  }
+  .data-table .del-cell button:hover { color: var(--danger); }
+  .data-table tr.hidden-row td input { opacity: 0.3; }
+
+  .row-add-btn {
+    background: white;
+    border: 1px dashed var(--border);
+    color: var(--muted);
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 0.8rem;
+    margin-top: 4px;
+  }
+  .row-add-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+  /* ===== Toggle switches ===== */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 6px;
+    transition: all .15s;
+    cursor: pointer;
+  }
+  .toggle-row.on {
+    background: var(--danger-light);
+    border-color: #fecaca;
+  }
+  .toggle-row .label-wrap { flex: 1; min-width: 0; }
+  .toggle-row .label { font-size: 0.85rem; font-weight: 600; }
+  .toggle-row .label-tech {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--muted);
+    font-weight: 500;
+    margin-top: 2px;
+  }
+  .toggle-row.on .label-tech { color: var(--danger); }
+  .toggle-row input[type="checkbox"] {
+    transform: scale(1.3);
+    cursor: pointer;
+    margin-left: 8px;
+  }
+  .toggle-row .info {
+    background: #e2e8f0;
+    color: var(--muted);
+    border: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    font-size: 0.7rem;
+    font-weight: 700;
+    cursor: help;
+    margin-left: 6px;
+    line-height: 1;
+  }
+  .toggle-row .info:hover { background: var(--primary); color: white; }
+
+  .sub-controls {
+    margin: -2px 0 8px 12px;
+    padding: 8px 10px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.85rem;
+  }
+  .sub-controls label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+  .sub-controls label:last-child { margin-bottom: 0; }
+  .sub-controls input[type="number"] {
+    width: 80px;
+    padding: 3px 6px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font: inherit;
+  }
+  .sub-controls select {
+    padding: 3px 8px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font: inherit;
+    background: white;
+  }
+  .color-preset {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .color-preset button {
+    padding: 8px 4px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    font-size: 0.72rem;
+    font-weight: 600;
+  }
+  .color-preset button.active {
+    border-color: var(--primary);
+    background: var(--primary-light);
+  }
+  .color-preset .swatches {
+    display: flex;
+    gap: 2px;
+    justify-content: center;
+    margin-bottom: 3px;
+  }
+  .color-preset .sw {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+  }
+
+  .ctrl-buttons {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .ctrl-buttons button {
+    flex: 1;
+    padding: 6px 10px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .ctrl-buttons button:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-light);
+  }
+  .ctrl-buttons button.danger:hover {
+    border-color: var(--danger);
+    color: var(--danger);
+    background: var(--danger-light);
+  }
+
+  /* ===== Preview panel ===== */
+  .preview-panel {
+    background: var(--panel);
+    border-radius: 12px;
+    padding: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.05);
+    border: 1px solid var(--border);
+    position: sticky;
+    top: 16px;
+    height: fit-content;
+  }
+  .preview-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .preview-toolbar .tech-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    flex: 1;
+    min-width: 100px;
+  }
+  .tech-chip {
+    background: var(--danger);
+    color: white;
+    font-size: 0.7rem;
+    padding: 3px 8px;
+    border-radius: 99px;
+    font-weight: 700;
+  }
+  .tech-chip.honest { background: var(--safe); }
+  .preview-toolbar .toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .meter {
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+  .meter-bar {
+    width: 80px;
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 6px;
+  }
+  .meter-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--safe) 0%, var(--warn) 50%, var(--danger) 100%);
+    transition: width .25s;
+  }
+  .preview-btn {
+    background: white;
+    border: 1px solid var(--border);
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+  .preview-btn:hover { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
+  .preview-btn.active {
+    background: var(--safe-light);
+    border-color: var(--safe);
+    color: var(--safe);
+  }
+
+  /* ===== Slide canvas ===== */
+  .slide-canvas {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+    transition: background .3s;
+    display: flex;
+    flex-direction: column;
+  }
+  .slide-canvas.bg-red { background: linear-gradient(135deg, #fef7f7 0%, #fee2e2 100%); }
+  .slide-canvas.bg-dark { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: #fff; }
+  .slide-canvas.bg-clean { background: white; }
+  .slide-canvas.bg-warn { background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); }
+  .slide-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin: 0 0 4px 0;
+    line-height: 1.3;
+    color: inherit;
+    word-break: break-word;
+  }
+  .slide-canvas.dramatic .slide-title { color: var(--danger); }
+  .slide-canvas.bg-dark .slide-title { color: #fef3c7; }
+  .slide-subtitle {
+    font-size: 0.9rem;
+    color: var(--muted);
+    margin-bottom: 12px;
+    font-style: italic;
+  }
+  .slide-canvas.bg-dark .slide-subtitle { color: #cbd5e1; }
+  .slide-chart-wrap {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .slide-caption {
+    margin-top: 8px;
+    text-align: center;
+    font-weight: 700;
+    color: var(--danger);
+    font-size: 0.95rem;
+  }
+  .slide-canvas.bg-dark .slide-caption { color: #fbbf24; }
+  .slide-source {
+    position: absolute;
+    bottom: 8px;
+    right: 14px;
+    font-size: 0.65rem;
+    color: var(--muted);
+    font-style: italic;
+  }
+  .slide-canvas.bg-dark .slide-source { color: #94a3b8; }
+
+  /* ===== Compare mode ===== */
+  .compare-mode .slide-canvas {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 16px;
+  }
+  .compare-half {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .compare-label {
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 6px;
+    display: inline-block;
+    width: fit-content;
+  }
+  .compare-label.honest { background: #dcfce7; color: #166534; }
+  .compare-label.manip { background: #fee2e2; color: #991b1b; }
+  .compare-half .mini-title {
+    font-weight: 700;
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+    word-break: break-word;
+  }
+  .compare-half .mini-chart {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Honest preview override */
+  .preview-area.honest-preview .slide-canvas { background: white !important; color: #0f172a !important; }
+  .preview-area.honest-preview .slide-title { color: #0f172a !important; }
+
+  /* Footer hints */
+  .hints {
+    grid-column: 1 / -1;
+    background: var(--primary-light);
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.8rem;
+    color: #1e40af;
+  }
+  .hints b { font-weight: 800; }
+  .hints kbd {
+    background: white;
+    padding: 1px 5px;
+    border: 1px solid #bfdbfe;
+    border-radius: 3px;
+    font-size: 0.72rem;
+    font-family: monospace;
+  }
+
+  /* ===== Modal ===== */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 16px;
+  }
+  .modal-overlay.visible { display: flex; }
+  .modal {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 40px rgba(0,0,0,.2);
+  }
+  .modal h2 {
+    margin: 0 0 16px 0;
+    font-size: 1.15rem;
+    font-weight: 800;
+  }
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 1.4rem;
+    cursor: pointer;
+    color: var(--muted);
+    float: right;
+    line-height: 1;
+    padding: 0;
+  }
+  .modal textarea {
+    width: 100%;
+    min-height: 180px;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font: inherit;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.85rem;
+  }
+  .modal .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .modal button.primary {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .modal button.secondary {
+    background: white;
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  /* Tooltip */
+  [data-tip] { position: relative; }
+  [data-tip]:hover::after {
+    content: attr(data-tip);
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: calc(100% + 6px);
+    background: #1e293b;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    z-index: 100;
+    pointer-events: none;
+    max-width: 260px;
+    white-space: normal;
+    width: max-content;
+    text-align: center;
+  }
+
+  /* Print styles */
+  @media print {
+    header.app-header, .slide-tabs, .controls, .preview-toolbar, .hints { display: none !important; }
+    body, .main, .preview-panel {
+      margin: 0; padding: 0; background: white; border: none; box-shadow: none;
+      grid-template-columns: 1fr;
+    }
+    .preview-panel { padding: 0; }
+    .slide-canvas {
+      aspect-ratio: auto;
+      width: 100%;
+      height: 100vh;
+      page-break-after: always;
+      border: none;
+      border-radius: 0;
+    }
+    @page { size: landscape; margin: 0; }
+  }
+
+  .print-canvas-container { display: none; }
+  body.printing .print-canvas-container { display: block; }
+  body.printing > *:not(.print-canvas-container) { display: none !important; }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div>
+    <h1>📊 操作グラフ プレゼンメーカー</h1>
+    <span class="tag">情報Ⅰ</span>
+  </div>
+  <div class="actions">
+    <button class="primary" onclick="openModal('templates')">🚀 クイックスタート</button>
+    <button onclick="addSlide()">＋ スライド</button>
+    <button onclick="duplicateSlide()">📋 複製</button>
+    <button onclick="saveToFile()">💾 保存</button>
+    <button onclick="document.getElementById('load-file').click()">📁 読込</button>
+    <input type="file" id="load-file" accept=".json" style="display:none" onchange="loadFromFile(event)">
+    <button onclick="printAll()">🖨 印刷/PDF</button>
+    <button onclick="resetAll()" title="全消去">🗑</button>
+  </div>
+</header>
+
+<div class="slide-tabs" id="slide-tabs"></div>
+
+<div class="main">
+
+  <div class="controls" id="controls"></div>
+
+  <div class="preview-panel">
+    <div class="preview-toolbar">
+      <div class="tech-chips" id="tech-chips"></div>
+      <div class="toolbar-right">
+        <span class="meter">
+          歪み度
+          <span class="meter-bar"><span class="meter-fill" id="meter-fill" style="width:0%"></span></span>
+          <span id="meter-val">0</span>
+        </span>
+        <button class="preview-btn" id="honest-toggle" onclick="toggleHonest()" data-tip="操作なしの「正直版」を一時表示">👁 正直で見る</button>
+        <button class="preview-btn" onclick="exportPNG()" data-tip="このスライドだけPNG画像で保存">🖼 PNG</button>
+      </div>
+    </div>
+    <div id="preview-area"></div>
+  </div>
+
+  <div class="hints">
+    <b>📐 授業中の流れ：</b>
+    ① <b>スプレッドシートで集計</b>（bin幅も判断） →
+    ② このアプリに <b>📋CSV貼り付け</b> →
+    ③ <b>操作技法</b>をON/OFFしてスライド完成 →
+    ④ <b>👁正直で見る</b>で対比確認 →
+    ⑤ <b>🖨印刷</b>でPDF / <b>🖼PNG</b>で画像保存
+    <br>
+    <b>💡ヒント：</b>
+    <b>🚀クイックスタート</b>は「ゴールイメージ」のデモ用テンプレ集。生徒は基本、自分の集計データから始めます。
+    <br>
+    <b>⌨ ショートカット：</b>
+    <kbd>Ctrl+N</kbd> 新規 / <kbd>Ctrl+D</kbd> 複製 / <kbd>Ctrl+S</kbd> 保存 /
+    <kbd>←</kbd> <kbd>→</kbd> スライド切替 / <kbd>Esc</kbd> モーダル閉
+  </div>
+</div>
+
+<!-- Modal: Templates / Sample data / Paste CSV -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modal-body"></div>
+</div>
+
+<!-- Print container -->
+<div class="print-canvas-container" id="print-container"></div>
+
+<script>
+// ====================================================================
+// State Management
+// ====================================================================
+const TECHNIQUE_DEFS = {
+  axisTrunc: {
+    name: '軸の途中省略', short: '軸操作', score: 25,
+    tip: 'Y軸を途中から始めることで、わずかな差を大きく見せます。ニュース番組やプレゼン資料でよく使われる手法。'
+  },
+  cherryPick: {
+    name: 'Cherry Picking', short: '範囲選別', score: 20,
+    tip: '都合のいいデータだけ選んで表示し、不利な部分を隠す手法。「3時間以上が74%！」など閾値の選び方も含まれます。'
+  },
+  threeDee: {
+    name: '3D効果', short: '3D歪み', score: 15,
+    tip: '立体的な見た目で奥行きや遠近を作り、実際の比率を歪めます。円グラフで特に強力。'
+  },
+  colorBias: {
+    name: '色のフレーミング', short: '色操作', score: 10,
+    tip: '赤＝危険、緑＝安全のような色の心理効果を利用します。同じデータでも色で印象が大きく変わります。'
+  },
+  decoration: {
+    name: '装飾・煽り背景', short: '煽り', score: 15,
+    tip: '背景の色やキャプションの「!!」「危険水域」などで感情を煽ります。情報以外の要素で印象を作る手法。'
+  },
+  exaggerate: {
+    name: 'バー高さ強調', short: '誇張', score: 15,
+    tip: 'バーや線を実際の値より大きく見せます。軸操作と組み合わせると効果絶大。'
+  },
+  reorder: {
+    name: '順序操作', short: '並び替え', score: 5,
+    tip: '見せたいものを最初や最後に置く、増加傾向に並び替える等で印象を作ります。'
+  },
+};
+
+const COLOR_PRESETS = {
+  neutral: { name: '中立', colors: ['#64748b', '#94a3b8', '#cbd5e1', '#e2e8f0', '#475569'] },
+  warning: { name: '警告', colors: ['#fca5a5', '#f87171', '#ef4444', '#dc2626', '#991b1b'] },
+  safe:    { name: '安全', colors: ['#86efac', '#4ade80', '#22c55e', '#16a34a', '#15803d'] },
+  primary: { name: '青系', colors: ['#bfdbfe', '#93c5fd', '#60a5fa', '#3b82f6', '#1d4ed8'] },
+};
+
+// Slide templates ─ 既に集計済みのサンプル数値を内蔵
+// 生徒は原則「スプレッドシートで集計→CSV貼り付け」で自分のデータを入れる
+const TEMPLATES = {
+  blank: {
+    name: '⚪ まっさら（自分で作る）',
+    desc: 'CSV貼り付けからデータを入れて自由に',
+    config: {
+      title: 'タイトルを入力',
+      subtitle: 'サブタイトル',
+      caption: '',
+      source: '',
+      background: 'clean',
+      chartType: 'bar',
+      manip: { axisTrunc:false, cherryPick:false, threeDee:false, colorBias:false, decoration:false, exaggerate:false, reorder:false },
+      colorPreset: 'primary',
+      customRows: [
+        {label:'A', value:100, visible:true},
+        {label:'B', value:80, visible:true},
+      ]
+    }
+  },
+  honest: {
+    name: '✅ 正直なグラフ（操作なし）',
+    desc: '比較対象としての「お手本」',
+    config: {
+      title: 'クラスのスマホ時間 分布',
+      subtitle: '集計結果（n=225）',
+      caption: '',
+      source: '※ bin幅 1時間刻みで集計',
+      background: 'clean',
+      chartType: 'bar',
+      manip: { axisTrunc:false, cherryPick:false, threeDee:false, colorBias:false, decoration:false, exaggerate:false, reorder:false },
+      colorPreset: 'primary',
+      customRows: [
+        {label:'1h未満', value:10, visible:true},
+        {label:'1-2h', value:19, visible:true},
+        {label:'2-3h', value:29, visible:true},
+        {label:'3-4h', value:50, visible:true},
+        {label:'4-5h', value:27, visible:true},
+        {label:'5-6h', value:29, visible:true},
+        {label:'6-7h', value:24, visible:true},
+        {label:'7h以上', value:37, visible:true},
+      ]
+    }
+  },
+  axisCut: {
+    name: '📉 軸の途中省略「過去最高水準!!」',
+    desc: 'Y軸を途中から始めて、わずかな差を大事件に',
+    config: {
+      title: '高校生のスマホ時間、過去最高水準!!',
+      subtitle: '── クラス調査による衝撃の事実',
+      caption: '↑ 急増中!! 危険水域!!',
+      source: '※ Y軸切断・架空の年次データ',
+      background: 'red',
+      chartType: 'bar',
+      manip: { axisTrunc:true, cherryPick:false, threeDee:false, colorBias:true, decoration:true, exaggerate:false, reorder:false },
+      yMin: 220, yMax: 280,
+      colorPreset: 'warning',
+      customRows: [
+        {label:'2024年', value:245, visible:true},
+        {label:'2025年', value:258, visible:true},
+        {label:'2026年', value:267, visible:true},
+      ]
+    }
+  },
+  cherryPick: {
+    name: '🍒 Cherry Picking「3人に1人がスマホ漬け!!」',
+    desc: '都合のいい閾値だけ取り出して印象操作',
+    config: {
+      title: '3人に1人が「スマホ漬け」!?',
+      subtitle: '── 1日6時間以上の高校生の実態',
+      caption: '⚠ 平均寿命の8年分に相当!!',
+      source: '※ 6h以上だけ抽出した架空集計',
+      background: 'red',
+      chartType: 'pie',
+      manip: { axisTrunc:false, cherryPick:false, threeDee:false, colorBias:true, decoration:true, exaggerate:false, reorder:false },
+      colorPreset: 'warning',
+      customRows: [
+        {label:'6h以上', value:61, visible:true},
+        {label:'その他', value:164, visible:true},
+      ]
+    }
+  },
+  threeDee: {
+    name: '🎨 3D円グラフ・色フレーミング',
+    desc: '立体効果と色で印象を操作',
+    config: {
+      title: 'クラスのスマホ利用、危険ゾーンが拡大',
+      subtitle: '時間別の内訳（4分類）',
+      caption: '',
+      source: '※ 3D効果・色フレーミングあり',
+      background: 'clean',
+      chartType: 'pie',
+      manip: { axisTrunc:false, cherryPick:false, threeDee:true, colorBias:true, decoration:false, exaggerate:false, reorder:false },
+      colorPreset: 'warning',
+      customRows: [
+        {label:'1h未満', value:10, visible:true},
+        {label:'1-3h', value:48, visible:true},
+        {label:'3-6h', value:106, visible:true},
+        {label:'6h以上', value:61, visible:true},
+      ]
+    }
+  },
+  sleep: {
+    name: '😴 睡眠時間「3年で30分減」',
+    desc: '小さな差を強調する軸操作',
+    config: {
+      title: '高校生の睡眠、3年で半時間減!!',
+      subtitle: '深刻な睡眠不足が拡大中',
+      caption: '↓ 加速する睡眠時間の減少',
+      source: '※ Y軸切断・架空データ',
+      background: 'warn',
+      chartType: 'line',
+      manip: { axisTrunc:true, cherryPick:false, threeDee:false, colorBias:true, decoration:true, exaggerate:true, reorder:false },
+      yMin: 6.0, yMax: 6.6,
+      colorPreset: 'warning',
+      customRows: [
+        {label:'2024年平均', value:6.5, visible:true},
+        {label:'2025年平均', value:6.3, visible:true},
+        {label:'2026年平均', value:6.1, visible:true},
+      ]
+    }
+  },
+};
+
+const DEFAULT_SLIDE = () => createSlideFromTemplate('axisCut');
+
+function createSlideFromTemplate(key) {
+  const tpl = TEMPLATES[key];
+  const cfg = tpl.config;
+  return {
+    id: 'slide-' + Math.random().toString(36).slice(2, 9),
+    title: cfg.title,
+    subtitle: cfg.subtitle,
+    caption: cfg.caption,
+    source: cfg.source,
+    background: cfg.background,
+    chartType: cfg.chartType,
+    rows: JSON.parse(JSON.stringify(cfg.customRows)),
+    manip: {...cfg.manip},
+    yMin: cfg.yMin ?? 0,
+    yMax: cfg.yMax ?? 100,
+    colorPreset: cfg.colorPreset,
+    sortOrder: 'original',
+    compareMode: false,
+  };
+}
+
+let state = {
+  slides: [DEFAULT_SLIDE()],
+  current: 0,
+};
+
+let honestPreview = false;  // transient UI state
+
+const STORAGE_KEY = 'operation-graph-maker-v2';
+
+function saveLocal() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+function loadLocal() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed.slides && parsed.slides.length) state = parsed;
+    }
+  } catch(e) {}
+}
+
+// ====================================================================
+// Slide CRUD
+// ====================================================================
+function currentSlide() { return state.slides[state.current]; }
+
+function addSlide() {
+  state.slides.push(DEFAULT_SLIDE());
+  state.current = state.slides.length - 1;
+  render();
+}
+function duplicateSlide() {
+  const copy = JSON.parse(JSON.stringify(currentSlide()));
+  copy.id = 'slide-' + Math.random().toString(36).slice(2, 9);
+  state.slides.splice(state.current + 1, 0, copy);
+  state.current++;
+  render();
+}
+function deleteSlide(idx) {
+  if (state.slides.length === 1) {
+    if (!confirm('最後の1枚です。初期スライドに戻しますか?')) return;
+    state.slides[0] = DEFAULT_SLIDE();
+  } else {
+    state.slides.splice(idx, 1);
+    if (state.current >= state.slides.length) state.current = state.slides.length - 1;
+  }
+  render();
+}
+function setCurrent(idx) { state.current = idx; render(); }
+function moveSlide(idx, dir) {
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= state.slides.length) return;
+  const [moved] = state.slides.splice(idx, 1);
+  state.slides.splice(newIdx, 0, moved);
+  if (state.current === idx) state.current = newIdx;
+  else if (state.current === newIdx) state.current = idx;
+  render();
+}
+function resetAll() {
+  if (!confirm('全スライドを消去して初期状態に戻します。よろしいですか?')) return;
+  state = { slides: [DEFAULT_SLIDE()], current: 0 };
+  render();
+}
+
+// ====================================================================
+// Tab rendering
+// ====================================================================
+function renderTabs() {
+  const el = document.getElementById('slide-tabs');
+  el.innerHTML = '';
+  state.slides.forEach((s, i) => {
+    const tab = document.createElement('div');
+    tab.className = 'slide-tab' + (i === state.current ? ' active' : '');
+    tab.innerHTML = `
+      <button class="icon-btn" title="左へ" onclick="event.stopPropagation();moveSlide(${i},-1)">◀</button>
+      <span>${i+1}</span>
+      <button class="icon-btn" title="右へ" onclick="event.stopPropagation();moveSlide(${i},1)">▶</button>
+      <button class="icon-btn del" title="削除" onclick="event.stopPropagation();deleteSlide(${i})">×</button>
+    `;
+    tab.onclick = () => setCurrent(i);
+    el.appendChild(tab);
+  });
+  const addBtn = document.createElement('div');
+  addBtn.className = 'slide-tab add';
+  addBtn.textContent = '＋ 新規';
+  addBtn.onclick = addSlide;
+  el.appendChild(addBtn);
+}
+
+// ====================================================================
+// Control panel rendering
+// ====================================================================
+function renderControls() {
+  const s = currentSlide();
+  const el = document.getElementById('controls');
+  el.innerHTML = `
+    <div class="ctrl-section">
+      <h3>📝 タイトルと文言</h3>
+      <label class="field">
+        メインタイトル
+        <input type="text" value="${escapeHtml(s.title)}" data-key="title" oninput="updText('title', this.value)">
+      </label>
+      <label class="field">
+        サブタイトル
+        <input type="text" value="${escapeHtml(s.subtitle)}" data-key="subtitle" oninput="updText('subtitle', this.value)">
+      </label>
+      <label class="field">
+        グラフ下のキャプション（煽り文）
+        <input type="text" value="${escapeHtml(s.caption)}" data-key="caption" oninput="updText('caption', this.value)">
+      </label>
+      <label class="field">
+        出典・脚注（右下に小さく表示）
+        <input type="text" value="${escapeHtml(s.source)}" data-key="source" oninput="updText('source', this.value)">
+      </label>
+    </div>
+
+    <div class="ctrl-section">
+      <h3>📊 データ（集計済み）</h3>
+      <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:9px 12px; margin-bottom:10px; font-size:0.78rem; color:#1e40af; line-height:1.55;">
+        <b>📐 ワークフロー</b><br>
+        ① <b>スプレッドシートで集計</b>（bin幅も自分で判断）<br>
+        ② このアプリへ <b>📋CSV貼り付け</b> で取り込み<br>
+        ③ 下の <b>操作技法</b> でスライド完成
+      </div>
+      <div class="ctrl-buttons">
+        <button onclick="openModal('paste')">📋 CSVデータを貼り付け</button>
+      </div>
+      <label class="field">
+        グラフ種類
+        <select onchange="upd('chartType', this.value)">
+          <option value="bar" ${s.chartType==='bar'?'selected':''}>棒グラフ</option>
+          <option value="pie" ${s.chartType==='pie'?'selected':''}>円グラフ</option>
+          <option value="line" ${s.chartType==='line'?'selected':''}>折れ線グラフ</option>
+        </select>
+      </label>
+      ${renderDataTable(s)}
+      <button class="row-add-btn" onclick="addRow()">＋ 行を追加</button>
+      <div style="margin-top:8px; font-size:0.75rem; color:var(--muted);">
+        💡 Cherry Picking ONのとき、左✓を外した行はグラフから消えます
+      </div>
+    </div>
+
+    <div class="ctrl-section">
+      <h3>⚠ 操作テクニック <span class="badge">操作技法</span></h3>
+      ${renderToggle('axisTrunc', s)}
+      ${s.manip.axisTrunc && (s.chartType==='bar' || s.chartType==='line') ? `
+        <div class="sub-controls">
+          <label>Y軸 最小値<input type="number" value="${s.yMin}" oninput="updText('yMin', +this.value)"></label>
+          <label>Y軸 最大値<input type="number" value="${s.yMax}" oninput="updText('yMax', +this.value)"></label>
+        </div>
+      ` : ''}
+
+      ${renderToggle('cherryPick', s)}
+      ${renderToggle('threeDee', s)}
+      ${renderToggle('colorBias', s)}
+      ${s.manip.colorBias ? `
+        <div class="color-preset">
+          ${Object.entries(COLOR_PRESETS).map(([k,v]) => `
+            <button class="${s.colorPreset===k?'active':''}" onclick="upd('colorPreset', '${k}')">
+              <div class="swatches">
+                ${v.colors.slice(0,4).map(c => `<div class="sw" style="background:${c}"></div>`).join('')}
+              </div>
+              ${v.name}
+            </button>
+          `).join('')}
+        </div>
+      ` : ''}
+
+      ${renderToggle('decoration', s)}
+      ${s.manip.decoration ? `
+        <div class="sub-controls">
+          <label>背景:
+            <select onchange="upd('background', this.value)">
+              <option value="clean" ${s.background==='clean'?'selected':''}>白(普通)</option>
+              <option value="red" ${s.background==='red'?'selected':''}>赤(危険)</option>
+              <option value="warn" ${s.background==='warn'?'selected':''}>黄(注意)</option>
+              <option value="dark" ${s.background==='dark'?'selected':''}>黒(衝撃)</option>
+            </select>
+          </label>
+        </div>
+      ` : ''}
+
+      ${renderToggle('exaggerate', s)}
+      ${renderToggle('reorder', s)}
+      ${s.manip.reorder ? `
+        <div class="sub-controls">
+          <label>並び順:
+            <select onchange="upd('sortOrder', this.value)">
+              <option value="original" ${s.sortOrder==='original'?'selected':''}>元のまま</option>
+              <option value="asc" ${s.sortOrder==='asc'?'selected':''}>値の小→大</option>
+              <option value="desc" ${s.sortOrder==='desc'?'selected':''}>値の大→小</option>
+            </select>
+          </label>
+        </div>
+      ` : ''}
+      <div style="margin-top:12px;">
+        <button class="row-add-btn" onclick="resetManip()">↺ 全ての操作を解除（正直版に戻す）</button>
+      </div>
+    </div>
+
+    <div class="ctrl-section">
+      <h3>👀 比較表示 <span class="badge badge-safe">確認用</span></h3>
+      <div class="toggle-row ${s.compareMode?'on':''}" onclick="toggleCompare()" style="background:${s.compareMode?'var(--safe-light)':'#f8fafc'}; border-color:${s.compareMode?'#86efac':'var(--border)'}">
+        <div class="label-wrap">
+          <span class="label">正直版と操作版を並べる</span>
+          <span class="label-tech">授業の解説スライド向け（左:操作なし／右:現在の設定）</span>
+        </div>
+        <input type="checkbox" ${s.compareMode?'checked':''} onclick="event.stopPropagation()" onchange="toggleCompare()">
+      </div>
+    </div>
+  `;
+}
+
+function renderToggle(key, s) {
+  const def = TECHNIQUE_DEFS[key];
+  const on = s.manip[key];
+  return `
+    <div class="toggle-row ${on?'on':''}" onclick="toggleManip('${key}')">
+      <div class="label-wrap">
+        <span class="label">${def.name}</span>
+        <span class="label-tech">技法: ${def.short}</span>
+      </div>
+      <button class="info" data-tip="${escapeHtml(def.tip)}" onclick="event.stopPropagation()">i</button>
+      <input type="checkbox" ${on?'checked':''} onclick="event.stopPropagation()" onchange="toggleManip('${key}')">
+    </div>
+  `;
+}
+
+function renderDataTable(s) {
+  let html = `<table class="data-table">
+    <thead><tr>
+      <th>✓</th><th>ラベル</th><th>値</th><th></th>
+    </tr></thead><tbody>`;
+  s.rows.forEach((r, i) => {
+    const dim = s.manip.cherryPick && !r.visible ? ' class="hidden-row"' : '';
+    html += `<tr${dim}>
+      <td class="vis-cell"><input type="checkbox" ${r.visible?'checked':''} onchange="updRow(${i}, 'visible', this.checked)"></td>
+      <td><input type="text" value="${escapeHtml(r.label)}" oninput="updRowText(${i}, 'label', this.value)"></td>
+      <td><input type="number" step="any" value="${r.value}" oninput="updRowText(${i}, 'value', +this.value)"></td>
+      <td class="del-cell"><button onclick="delRow(${i})" title="削除">×</button></td>
+    </tr>`;
+  });
+  html += `</tbody></table>`;
+  return html;
+}
+
+// ====================================================================
+// Update handlers — KEY FIX: text inputs don't rebuild controls
+// ====================================================================
+// For text inputs and value inputs: skip control re-render to preserve focus
+function updText(key, val) {
+  currentSlide()[key] = val;
+  renderPreview();
+  renderTechChips();
+  saveLocal();
+}
+function updRowText(i, key, val) {
+  currentSlide().rows[i][key] = val;
+  renderPreview();
+  renderTechChips();
+  saveLocal();
+}
+
+// For structural changes: full re-render
+function upd(key, val) {
+  currentSlide()[key] = val;
+  render();
+}
+function updRow(i, key, val) {
+  currentSlide().rows[i][key] = val;
+  render();
+}
+function addRow() {
+  currentSlide().rows.push({ label: '新項目', value: 100, visible: true });
+  render();
+}
+function delRow(i) {
+  if (currentSlide().rows.length <= 1) return;
+  currentSlide().rows.splice(i, 1);
+  render();
+}
+function toggleManip(key) {
+  currentSlide().manip[key] = !currentSlide().manip[key];
+  render();
+}
+function toggleCompare() {
+  currentSlide().compareMode = !currentSlide().compareMode;
+  render();
+}
+function resetManip() {
+  Object.keys(currentSlide().manip).forEach(k => currentSlide().manip[k] = false);
+  render();
+}
+
+// ====================================================================
+// Honest preview toggle (transient, doesn't modify state)
+// ====================================================================
+function toggleHonest() {
+  honestPreview = !honestPreview;
+  document.getElementById('honest-toggle').classList.toggle('active', honestPreview);
+  document.getElementById('honest-toggle').textContent = honestPreview ? '👁 操作版に戻す' : '👁 正直で見る';
+  renderPreview();
+  renderTechChips();
+}
+
+// ====================================================================
+// Technique chips + meter
+// ====================================================================
+function renderTechChips() {
+  const s = currentSlide();
+  const el = document.getElementById('tech-chips');
+  el.innerHTML = '';
+  let totalScore = 0;
+  const activeKeys = Object.keys(s.manip).filter(k => s.manip[k]);
+  if (activeKeys.length === 0 || honestPreview) {
+    const chip = document.createElement('span');
+    chip.className = 'tech-chip honest';
+    chip.textContent = honestPreview ? '👁 正直プレビュー' : '✓ 操作なし(正直)';
+    el.appendChild(chip);
+  } else {
+    activeKeys.forEach(k => {
+      const def = TECHNIQUE_DEFS[k];
+      totalScore += def.score;
+      const chip = document.createElement('span');
+      chip.className = 'tech-chip';
+      chip.textContent = def.short;
+      el.appendChild(chip);
+    });
+  }
+  const meterMax = 105;
+  document.getElementById('meter-fill').style.width = Math.min(100, totalScore / meterMax * 100) + '%';
+  document.getElementById('meter-val').textContent = honestPreview ? '0' : totalScore;
+}
+
+// ====================================================================
+// SVG Chart rendering
+// ====================================================================
+function ns(name) { return document.createElementNS('http://www.w3.org/2000/svg', name); }
+function setAttrs(el, attrs) { Object.entries(attrs).forEach(([k,v]) => el.setAttribute(k, v)); return el; }
+
+function renderChart(s, honestOverride=false) {
+  const W = 720, H = 400;
+  const svg = ns('svg');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+  svg.style.width = '100%';
+  svg.style.height = '100%';
+  svg.style.maxHeight = '100%';
+
+  const manip = (honestOverride || honestPreview)
+    ? { axisTrunc:false, cherryPick:false, threeDee:false, colorBias:false, decoration:false, exaggerate:false, reorder:false }
+    : s.manip;
+
+  let rows = [...s.rows];
+  if (manip.cherryPick) rows = rows.filter(r => r.visible);
+  if (manip.reorder) {
+    if (s.sortOrder === 'asc') rows.sort((a,b) => a.value - b.value);
+    else if (s.sortOrder === 'desc') rows.sort((a,b) => b.value - a.value);
+  }
+  if (rows.length === 0) {
+    const text = ns('text');
+    text.setAttribute('x', W/2); text.setAttribute('y', H/2);
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('fill', '#94a3b8');
+    text.textContent = '表示するデータがありません';
+    svg.appendChild(text);
+    return svg;
+  }
+
+  const colors = manip.colorBias
+    ? COLOR_PRESETS[s.colorPreset].colors
+    : COLOR_PRESETS.primary.colors;
+
+  if (s.chartType === 'bar') return renderBar(svg, rows, s, manip, colors, W, H);
+  if (s.chartType === 'pie') return renderPie(svg, rows, s, manip, colors, W, H);
+  if (s.chartType === 'line') return renderLine(svg, rows, s, manip, colors, W, H);
+  return svg;
+}
+
+function renderBar(svg, rows, s, manip, colors, W, H) {
+  const padL = 70, padR = 30, padT = 30, padB = 50;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
+
+  const vals = rows.map(r => r.value);
+  let yMin, yMax;
+  if (manip.axisTrunc) {
+    yMin = s.yMin; yMax = s.yMax;
+  } else {
+    yMin = Math.min(0, Math.min(...vals));
+    yMax = Math.max(...vals) * 1.1;
+  }
+  if (yMax <= yMin) yMax = yMin + 10;
+
+  const numTicks = 5;
+  for (let i = 0; i <= numTicks; i++) {
+    const v = yMin + (yMax - yMin) * (i / numTicks);
+    const y = padT + chartH - (i / numTicks) * chartH;
+    svg.appendChild(setAttrs(ns('line'), { x1: padL, y1: y, x2: W - padR, y2: y, stroke: '#e2e8f0' }));
+    const t = ns('text');
+    t.setAttribute('x', padL - 6); t.setAttribute('y', y + 4);
+    t.setAttribute('text-anchor', 'end'); t.setAttribute('font-size', '11'); t.setAttribute('fill', '#64748b');
+    t.textContent = formatVal(v);
+    svg.appendChild(t);
+  }
+
+  svg.appendChild(setAttrs(ns('line'), { x1: padL, y1: padT, x2: padL, y2: padT + chartH, stroke: '#475569', 'stroke-width': 1.5 }));
+  svg.appendChild(setAttrs(ns('line'), { x1: padL, y1: padT + chartH, x2: W - padR, y2: padT + chartH, stroke: '#475569', 'stroke-width': 1.5 }));
+
+  if (manip.axisTrunc) {
+    const by = padT + chartH;
+    const breakG = ns('g');
+    breakG.setAttribute('stroke', '#dc2626');
+    breakG.setAttribute('stroke-width', '1.5');
+    breakG.setAttribute('fill', 'white');
+    const p1 = ns('path');
+    p1.setAttribute('d', `M ${padL-7},${by-8} l 14,-5 l 0,3 l -14,5 z`);
+    breakG.appendChild(p1);
+    const p2 = ns('path');
+    p2.setAttribute('d', `M ${padL-7},${by-2} l 14,-5 l 0,3 l -14,5 z`);
+    breakG.appendChild(p2);
+    svg.appendChild(breakG);
+  }
+
+  const slot = chartW / rows.length;
+  const barW = Math.max(8, slot * 0.7);
+  const exMult = manip.exaggerate ? 1.25 : 1.0;
+
+  rows.forEach((r, i) => {
+    const x = padL + slot * i + (slot - barW) / 2;
+    const h = ((r.value - yMin) / (yMax - yMin)) * chartH * exMult;
+    const cappedH = Math.max(0, Math.min(h, chartH));
+    const y = padT + chartH - cappedH;
+    const color = colors[i % colors.length];
+
+    if (manip.threeDee) {
+      svg.appendChild(setAttrs(ns('polygon'), {
+        points: `${x+barW},${y} ${x+barW+10},${y-7} ${x+barW+10},${padT+chartH-7} ${x+barW},${padT+chartH}`,
+        fill: shade(color, -0.25),
+      }));
+      svg.appendChild(setAttrs(ns('polygon'), {
+        points: `${x},${y} ${x+10},${y-7} ${x+barW+10},${y-7} ${x+barW},${y}`,
+        fill: shade(color, 0.15),
+      }));
+    }
+
+    svg.appendChild(setAttrs(ns('rect'), {
+      x, y, width: barW, height: cappedH, fill: color,
+      stroke: manip.threeDee ? shade(color, -0.3) : 'none',
+      'stroke-width': manip.threeDee ? 1 : 0,
+    }));
+
+    const valLbl = ns('text');
+    valLbl.setAttribute('x', x + barW/2); valLbl.setAttribute('y', y - 6);
+    valLbl.setAttribute('text-anchor', 'middle'); valLbl.setAttribute('font-size', '13');
+    valLbl.setAttribute('font-weight', '700'); valLbl.setAttribute('fill', '#0f172a');
+    valLbl.textContent = formatVal(r.value);
+    svg.appendChild(valLbl);
+
+    const xLbl = ns('text');
+    xLbl.setAttribute('x', x + barW/2); xLbl.setAttribute('y', padT + chartH + 20);
+    xLbl.setAttribute('text-anchor', 'middle'); xLbl.setAttribute('font-size', '12');
+    xLbl.setAttribute('fill', '#475569');
+    xLbl.textContent = r.label;
+    svg.appendChild(xLbl);
+  });
+
+  return svg;
+}
+
+function renderPie(svg, rows, s, manip, colors, W, H) {
+  const cx = W/2 - 50, cy = H/2 + (manip.threeDee ? -15 : 0);
+  const r = Math.min(W, H) * 0.32;
+  const ry = manip.threeDee ? r * 0.55 : r;
+  const total = rows.reduce((a, b) => a + b.value, 0);
+  if (total <= 0) return svg;
+
+  if (manip.threeDee) {
+    svg.appendChild(setAttrs(ns('ellipse'), {
+      cx, cy: cy + 22, rx: r, ry: ry, fill: '#475569', opacity: 0.3,
+    }));
+    const sideRim = ns('path');
+    sideRim.setAttribute('d', `M ${cx-r},${cy} L ${cx-r},${cy+22} A ${r},${ry} 0 0,0 ${cx+r},${cy+22} L ${cx+r},${cy} A ${r},${ry} 0 0,1 ${cx-r},${cy} Z`);
+    sideRim.setAttribute('fill', '#1e293b');
+    sideRim.setAttribute('opacity', '0.45');
+    svg.appendChild(sideRim);
+  }
+
+  let acc = 0;
+  rows.forEach((row, i) => {
+    const startAngle = (acc / total) * Math.PI * 2 - Math.PI/2;
+    acc += row.value;
+    const endAngle = (acc / total) * Math.PI * 2 - Math.PI/2;
+    const large = (endAngle - startAngle) > Math.PI ? 1 : 0;
+    const x1 = cx + r * Math.cos(startAngle);
+    const y1 = cy + ry * Math.sin(startAngle);
+    const x2 = cx + r * Math.cos(endAngle);
+    const y2 = cy + ry * Math.sin(endAngle);
+
+    const path = ns('path');
+    path.setAttribute('d', `M ${cx},${cy} L ${x1},${y1} A ${r},${ry} 0 ${large},1 ${x2},${y2} Z`);
+    path.setAttribute('fill', colors[i % colors.length]);
+    path.setAttribute('stroke', 'white');
+    path.setAttribute('stroke-width', '2');
+    svg.appendChild(path);
+
+    const mid = (startAngle + endAngle) / 2;
+    const lx = cx + r * 1.15 * Math.cos(mid);
+    const ly = cy + ry * 1.15 * Math.sin(mid);
+    const pct = ((row.value / total) * 100).toFixed(1) + '%';
+    const t = ns('text');
+    t.setAttribute('x', lx); t.setAttribute('y', ly);
+    t.setAttribute('text-anchor', lx > cx ? 'start' : 'end');
+    t.setAttribute('font-size', '12'); t.setAttribute('font-weight', '700');
+    t.setAttribute('fill', '#0f172a');
+    t.textContent = `${row.label} ${pct}`;
+    svg.appendChild(t);
+  });
+
+  // Legend on right
+  const lx = W - 160, ly = 60;
+  rows.forEach((row, i) => {
+    svg.appendChild(setAttrs(ns('rect'), {
+      x: lx, y: ly + i*20, width: 14, height: 14, fill: colors[i % colors.length],
+    }));
+    const t = ns('text');
+    t.setAttribute('x', lx + 22); t.setAttribute('y', ly + i*20 + 11);
+    t.setAttribute('font-size', '12'); t.setAttribute('fill', '#1e293b');
+    t.textContent = `${row.label} (${row.value})`;
+    svg.appendChild(t);
+  });
+
+  return svg;
+}
+
+function renderLine(svg, rows, s, manip, colors, W, H) {
+  const padL = 70, padR = 30, padT = 30, padB = 50;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
+  const vals = rows.map(r => r.value);
+  let yMin, yMax;
+  if (manip.axisTrunc) { yMin = s.yMin; yMax = s.yMax; }
+  else { yMin = Math.min(0, Math.min(...vals)); yMax = Math.max(...vals) * 1.1; }
+  if (yMax <= yMin) yMax = yMin + 10;
+
+  for (let i = 0; i <= 5; i++) {
+    const y = padT + chartH - (i/5) * chartH;
+    const v = yMin + (yMax - yMin) * (i/5);
+    svg.appendChild(setAttrs(ns('line'), { x1: padL, y1: y, x2: W-padR, y2: y, stroke: '#e2e8f0' }));
+    const t = ns('text');
+    t.setAttribute('x', padL-6); t.setAttribute('y', y+4); t.setAttribute('text-anchor', 'end');
+    t.setAttribute('font-size', '11'); t.setAttribute('fill', '#64748b');
+    t.textContent = formatVal(v);
+    svg.appendChild(t);
+  }
+  svg.appendChild(setAttrs(ns('line'), { x1: padL, y1: padT, x2: padL, y2: padT+chartH, stroke: '#475569' }));
+  svg.appendChild(setAttrs(ns('line'), { x1: padL, y1: padT+chartH, x2: W-padR, y2: padT+chartH, stroke: '#475569' }));
+
+  if (manip.axisTrunc) {
+    const by = padT + chartH;
+    const breakG = ns('g');
+    breakG.setAttribute('stroke', '#dc2626');
+    breakG.setAttribute('stroke-width', '1.5');
+    breakG.setAttribute('fill', 'white');
+    breakG.innerHTML = `
+      <path d="M ${padL-7},${by-8} l 14,-5 l 0,3 l -14,5 z"/>
+      <path d="M ${padL-7},${by-2} l 14,-5 l 0,3 l -14,5 z"/>
+    `;
+    svg.appendChild(breakG);
+  }
+
+  const slot = rows.length > 1 ? chartW / (rows.length - 1) : chartW;
+  const pts = rows.map((r, i) => {
+    const x = padL + slot * i;
+    const y = padT + chartH - ((r.value - yMin) / (yMax - yMin)) * chartH;
+    return { x, y, r };
+  });
+
+  const path = ns('polyline');
+  path.setAttribute('points', pts.map(p => `${p.x},${p.y}`).join(' '));
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke', colors[0] || '#2563eb');
+  path.setAttribute('stroke-width', manip.exaggerate ? 5 : 3);
+  svg.appendChild(path);
+
+  pts.forEach((p, i) => {
+    svg.appendChild(setAttrs(ns('circle'), {
+      cx: p.x, cy: p.y, r: 5, fill: colors[i % colors.length] || colors[0],
+    }));
+    const vt = ns('text');
+    vt.setAttribute('x', p.x); vt.setAttribute('y', p.y - 12);
+    vt.setAttribute('text-anchor', 'middle'); vt.setAttribute('font-size', '12');
+    vt.setAttribute('font-weight', '700'); vt.setAttribute('fill', '#0f172a');
+    vt.textContent = formatVal(p.r.value);
+    svg.appendChild(vt);
+    const xt = ns('text');
+    xt.setAttribute('x', p.x); xt.setAttribute('y', padT+chartH+20);
+    xt.setAttribute('text-anchor', 'middle'); xt.setAttribute('font-size', '12');
+    xt.setAttribute('fill', '#475569');
+    xt.textContent = p.r.label;
+    svg.appendChild(xt);
+  });
+
+  return svg;
+}
+
+function formatVal(v) {
+  if (typeof v !== 'number') return v;
+  if (Math.abs(v) < 1) return v.toFixed(2);
+  if (Math.abs(v) < 10) return v.toFixed(1);
+  return Math.round(v).toString();
+}
+
+function shade(hex, amt) {
+  let h = hex.replace('#','');
+  if (h.length === 3) h = h.split('').map(c => c+c).join('');
+  let r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
+  const f = (v) => Math.max(0, Math.min(255, Math.round(v + (amt > 0 ? (255-v)*amt : v*amt))));
+  r = f(r); g = f(g); b = f(b);
+  return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+}
+
+// ====================================================================
+// Preview rendering
+// ====================================================================
+function buildSlideCanvas(s, forPrint=false) {
+  const canvas = document.createElement('div');
+  const effectiveDecoration = !honestPreview && s.manip.decoration;
+  const bgClass = effectiveDecoration ? `bg-${s.background}` : 'bg-clean';
+  const dramatic = effectiveDecoration ? ' dramatic' : '';
+  canvas.className = `slide-canvas ${bgClass}${dramatic}`;
+
+  if (s.compareMode) {
+    canvas.style.display = 'grid';
+    canvas.style.gridTemplateColumns = '1fr 1fr';
+    canvas.style.gap = '12px';
+    canvas.style.padding = '16px';
+
+    const left = document.createElement('div');
+    left.className = 'compare-half';
+    const ll = document.createElement('span'); ll.className='compare-label honest'; ll.textContent='正直版';
+    const lt = document.createElement('div'); lt.className='mini-title'; lt.textContent = s.title.replace(/!+$/, '');
+    const lc = document.createElement('div'); lc.className='mini-chart';
+    lc.appendChild(renderChart(s, true));
+    left.append(ll, lt, lc);
+
+    const right = document.createElement('div');
+    right.className = 'compare-half';
+    const rl = document.createElement('span'); rl.className='compare-label manip'; rl.textContent='操作版';
+    const rt = document.createElement('div'); rt.className='mini-title'; rt.textContent = s.title;
+    if (s.manip.decoration) rt.style.color = 'var(--danger)';
+    const rc = document.createElement('div'); rc.className='mini-chart';
+    rc.appendChild(renderChart(s, false));
+    right.append(rl, rt, rc);
+
+    canvas.append(left, right);
+  } else {
+    const title = document.createElement('h2');
+    title.className = 'slide-title';
+    title.textContent = s.title;
+    canvas.appendChild(title);
+
+    if (s.subtitle) {
+      const sub = document.createElement('div');
+      sub.className = 'slide-subtitle';
+      sub.textContent = s.subtitle;
+      canvas.appendChild(sub);
+    }
+
+    const chartWrap = document.createElement('div');
+    chartWrap.className = 'slide-chart-wrap';
+    chartWrap.appendChild(renderChart(s));
+    canvas.appendChild(chartWrap);
+
+    if (s.caption && !honestPreview) {
+      const cap = document.createElement('div');
+      cap.className = 'slide-caption';
+      cap.textContent = s.caption;
+      canvas.appendChild(cap);
+    }
+    if (s.source) {
+      const src = document.createElement('div');
+      src.className = 'slide-source';
+      src.textContent = s.source;
+      canvas.appendChild(src);
+    }
+  }
+  return canvas;
+}
+
+function renderPreview() {
+  const el = document.getElementById('preview-area');
+  el.innerHTML = '';
+  el.className = (currentSlide().compareMode ? 'compare-mode' : '') + ' preview-area' + (honestPreview ? ' honest-preview' : '');
+  el.appendChild(buildSlideCanvas(currentSlide()));
+}
+
+// ====================================================================
+// Master render
+// ====================================================================
+function render() {
+  renderTabs();
+  renderControls();
+  renderTechChips();
+  renderPreview();
+  saveLocal();
+}
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ====================================================================
+// File I/O
+// ====================================================================
+function saveToFile() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `操作グラフ_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+function loadFromFile(ev) {
+  const file = ev.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if (parsed.slides && parsed.slides.length) {
+        state = parsed;
+        state.current = 0;
+        render();
+        alert('読み込みました');
+      } else { alert('読み込めませんでした'); }
+    } catch(err) { alert('JSONの読み込みに失敗: ' + err.message); }
+  };
+  reader.readAsText(file);
+  ev.target.value = '';
+}
+
+// ====================================================================
+// PNG export
+// ====================================================================
+function exportPNG() {
+  const canvasEl = buildSlideCanvas(currentSlide());
+  canvasEl.style.width = '1280px';
+  canvasEl.style.height = '800px';
+  canvasEl.style.position = 'fixed';
+  canvasEl.style.left = '-9999px';
+  canvasEl.style.top = '0';
+  document.body.appendChild(canvasEl);
+
+  // Serialize as SVG (foreignObject) for PNG conversion
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'width:1280px; height:800px; background:white;';
+  wrap.appendChild(canvasEl.cloneNode(true));
+  document.body.removeChild(canvasEl);
+
+  const svgWrap = `
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800">
+  <foreignObject width="100%" height="100%">
+    <div xmlns="http://www.w3.org/1999/xhtml" style="width:1280px; height:800px; font-family:'Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif;">
+      ${getInlinedStyles()}
+      ${wrap.innerHTML}
+    </div>
+  </foreignObject>
+</svg>`;
+
+  const svgBlob = new Blob([svgWrap], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(svgBlob);
+  const img = new Image();
+  img.onload = () => {
+    const cnv = document.createElement('canvas');
+    cnv.width = 1280; cnv.height = 800;
+    const ctx = cnv.getContext('2d');
+    ctx.fillStyle = 'white'; ctx.fillRect(0,0,1280,800);
+    ctx.drawImage(img, 0, 0);
+    URL.revokeObjectURL(url);
+    cnv.toBlob(blob => {
+      const dl = document.createElement('a');
+      dl.href = URL.createObjectURL(blob);
+      dl.download = `slide_${state.current+1}_${new Date().toISOString().slice(0,10)}.png`;
+      dl.click();
+      URL.revokeObjectURL(dl.href);
+    });
+  };
+  img.onerror = () => {
+    URL.revokeObjectURL(url);
+    alert('PNG変換に失敗しました。「印刷/PDF」をご利用ください。');
+  };
+  img.src = url;
+}
+
+function getInlinedStyles() {
+  return `<style>
+    .slide-canvas { width:1280px; height:800px; padding:50px; box-sizing:border-box; display:flex; flex-direction:column; position:relative; }
+    .slide-canvas.bg-clean { background:white; }
+    .slide-canvas.bg-red { background:linear-gradient(135deg,#fef7f7,#fee2e2); }
+    .slide-canvas.bg-warn { background:linear-gradient(135deg,#fffbeb,#fef3c7); }
+    .slide-canvas.bg-dark { background:linear-gradient(135deg,#1e293b,#334155); color:white; }
+    .slide-title { font-size:2.6rem; font-weight:800; margin:0 0 10px; line-height:1.3; }
+    .slide-canvas.dramatic .slide-title { color:#dc2626; }
+    .slide-canvas.bg-dark .slide-title { color:#fef3c7; }
+    .slide-subtitle { font-size:1.3rem; color:#64748b; margin-bottom:24px; font-style:italic; }
+    .slide-canvas.bg-dark .slide-subtitle { color:#cbd5e1; }
+    .slide-chart-wrap { flex:1; display:flex; align-items:center; justify-content:center; min-height:0; }
+    .slide-caption { margin-top:16px; text-align:center; font-weight:700; color:#dc2626; font-size:1.4rem; }
+    .slide-canvas.bg-dark .slide-caption { color:#fbbf24; }
+    .slide-source { position:absolute; bottom:14px; right:30px; font-size:0.9rem; color:#64748b; font-style:italic; }
+    .compare-half { border:1px solid #e2e8f0; padding:14px; background:white; display:flex; flex-direction:column; }
+    .compare-label { font-size:0.9rem; font-weight:800; padding:3px 10px; border-radius:4px; margin-bottom:8px; display:inline-block; width:fit-content; }
+    .compare-label.honest { background:#dcfce7; color:#166534; }
+    .compare-label.manip { background:#fee2e2; color:#991b1b; }
+    .mini-title { font-weight:700; font-size:1.1rem; margin-bottom:8px; }
+    .mini-chart { flex:1; min-height:0; display:flex; align-items:center; justify-content:center; }
+    svg { width:100%; height:100%; }
+  </style>`;
+}
+
+// ====================================================================
+// Print all slides
+// ====================================================================
+function printAll() {
+  const container = document.getElementById('print-container');
+  container.innerHTML = '';
+  const originalCurrent = state.current;
+  state.slides.forEach((_, i) => {
+    state.current = i;
+    container.appendChild(buildSlideCanvas(currentSlide(), true));
+  });
+  state.current = originalCurrent;
+
+  document.body.classList.add('printing');
+  setTimeout(() => {
+    window.print();
+    document.body.classList.remove('printing');
+    container.innerHTML = '';
+  }, 200);
+}
+
+// ====================================================================
+// Modal: templates / samples / paste CSV
+// ====================================================================
+function openModal(kind) {
+  const body = document.getElementById('modal-body');
+  let html = '';
+
+  if (kind === 'templates') {
+    html = `<button class="modal-close" onclick="closeModal()">×</button>
+      <h2>🚀 クイックスタート</h2>
+      <p style="color:var(--muted); margin-bottom:16px;">既製のテンプレートからスタートできます。現在のスライドが置き換わります。</p>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        ${Object.entries(TEMPLATES).map(([k,t]) => `
+          <button class="modal-tpl" onclick="applyTemplate('${k}')" style="text-align:left; padding:12px; border:1px solid var(--border); border-radius:8px; background:white; cursor:pointer;">
+            <div style="font-weight:700; font-size:0.95rem;">${escapeHtml(t.name)}</div>
+            <div style="font-size:0.78rem; color:var(--muted); margin-top:3px;">${escapeHtml(t.desc)}</div>
+          </button>
+        `).join('')}
+      </div>`;
+  } else if (kind === 'paste') {
+    html = `<button class="modal-close" onclick="closeModal()">×</button>
+      <h2>📋 集計済みデータの貼り付け</h2>
+      <p style="color:var(--muted); margin-bottom:8px;">スプレッドシート（Excel / Google Sheets）から、<b>集計済み</b>の表をコピー&ペーストしてください。<br>
+      1列目=ラベル、2列目=値（カンマ/タブ/スペース区切り）。1行目がヘッダーなら自動で無視されます。</p>
+      <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:6px; padding:8px 12px; margin-bottom:12px; font-size:0.78rem; color:#92400e; line-height:1.55;">
+        💡 <b>覚えておいてほしいこと：</b><br>
+        <b>bin幅（区切り方）の選び方も、あなたの判断＝操作の一部</b>です。<br>
+        違う bin幅で集計し直したら、グラフの印象も変わります。余裕があれば2パターン作って見比べてみよう。
+      </div>
+      <textarea id="paste-area" placeholder="例:
+ラベル,値
+1h未満,10
+1-2h,19
+2-3h,29
+3-4h,50
+…"></textarea>
+      <div class="modal-footer">
+        <button class="secondary" onclick="closeModal()">キャンセル</button>
+        <button class="primary" onclick="applyPaste()">データを置き換え</button>
+      </div>`;
+  }
+
+  body.innerHTML = html;
+  document.getElementById('modal-overlay').classList.add('visible');
+}
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('visible');
+}
+function applyTemplate(key) {
+  state.slides[state.current] = createSlideFromTemplate(key);
+  closeModal();
+  render();
+}
+function applyPaste() {
+  const text = document.getElementById('paste-area').value.trim();
+  if (!text) { closeModal(); return; }
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length);
+  const rows = [];
+  lines.forEach((line, i) => {
+    const cells = line.split(/[\t,;]+|\s{2,}/).map(c => c.trim()).filter(c => c.length);
+    if (cells.length < 2) return;
+    const v = parseFloat(cells[1].replace(/[^\d.\-]/g, ''));
+    if (isNaN(v)) {
+      if (i === 0) return; // likely header
+      return;
+    }
+    rows.push({ label: cells[0], value: v, visible: true });
+  });
+  if (rows.length === 0) { alert('データを読み取れませんでした'); return; }
+  currentSlide().rows = rows;
+  closeModal();
+  render();
+}
+
+// ====================================================================
+// Keyboard shortcuts
+// ====================================================================
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') { closeModal(); return; }
+  const tag = (e.target.tagName || '').toLowerCase();
+  const isField = tag === 'input' || tag === 'textarea' || tag === 'select';
+
+  if (!isField) {
+    if (e.key === 'ArrowLeft') { if (state.current > 0) { state.current--; render(); } e.preventDefault(); }
+    if (e.key === 'ArrowRight') { if (state.current < state.slides.length-1) { state.current++; render(); } e.preventDefault(); }
+  }
+
+  if ((e.ctrlKey || e.metaKey)) {
+    if (e.key === 'n') { e.preventDefault(); addSlide(); }
+    if (e.key === 'd') { e.preventDefault(); duplicateSlide(); }
+    if (e.key === 's') { e.preventDefault(); saveToFile(); }
+  }
+});
+
+// ====================================================================
+// Initialize
+// ====================================================================
+loadLocal();
+render();
+</script>
+</body>
+</html>
