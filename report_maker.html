@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>測定データ レポートメーカー</title>
+<style>
+:root {
+  --primary: #2563eb;
+  --primary-light: #eff6ff;
+  --ink: #0f172a;
+  --text: #334155;
+  --muted: #64748b;
+  --line: #e2e8f0;
+  --bg: #f1f5f9;
+  --paper: #ffffff;
+  --warn: #b45309;
+  --warn-bg: #fffbeb;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Noto Sans JP", "Noto Sans CJK JP", "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* ---------- アプリ全体 ---------- */
+.topbar {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 10px 20px;
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
+}
+.topbar h1 { font-size: 17px; margin: 0; color: var(--ink); flex: 1; min-width: 200px; }
+.topbar .saved { font-size: 12px; color: var(--muted); }
+button {
+  font: inherit; cursor: pointer;
+  border-radius: 8px; border: 1px solid var(--line);
+  background: var(--paper); color: var(--ink);
+  padding: 7px 14px;
+}
+button:hover { border-color: var(--muted); }
+button.primary { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 700; }
+button.primary:hover { filter: brightness(1.08); }
+button.small { font-size: 13px; padding: 4px 10px; }
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(340px, 480px) 1fr;
+  gap: 24px;
+  padding: 20px;
+  align-items: start;
+}
+@media (max-width: 1000px) {
+  .layout { grid-template-columns: 1fr; padding: 16px; }
+}
+
+/* ---------- 入力フォーム ---------- */
+.form { display: flex; flex-direction: column; gap: 14px; }
+.card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+}
+.card h2 {
+  font-size: 15px; margin: 0 0 10px; color: var(--ink);
+  display: flex; align-items: center; gap: 8px;
+}
+.card h2 .no {
+  display: inline-grid; place-items: center;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--primary); color: #fff; font-size: 12px;
+}
+.hint { font-size: 12.5px; color: var(--muted); margin: 0 0 8px; }
+label { display: block; font-size: 13px; color: var(--muted); margin: 8px 0 3px; }
+input[type=text], textarea, select {
+  width: 100%;
+  font: inherit; color: var(--ink);
+  border: 1px solid var(--line); border-radius: 8px;
+  padding: 7px 10px;
+  background: #fff;
+}
+input[type=text]:focus, textarea:focus, select:focus {
+  outline: 2px solid var(--primary-light); border-color: var(--primary);
+}
+textarea { resize: vertical; min-height: 80px; }
+textarea.data { font-family: ui-monospace, Consolas, monospace; font-size: 13px; min-height: 160px; white-space: pre; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.row3 { display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 10px; }
+.counter { text-align: right; font-size: 12px; color: var(--muted); }
+.counter.over { color: var(--warn); font-weight: 700; }
+.status {
+  font-size: 13px; margin-top: 8px; padding: 8px 10px; border-radius: 8px;
+  background: var(--primary-light); color: var(--ink);
+}
+.status.warn { background: var(--warn-bg); color: var(--warn); }
+.radios label {
+  display: flex; align-items: center; gap: 8px;
+  color: var(--ink); font-size: 14px; margin: 4px 0;
+  padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; cursor: pointer;
+}
+.radios input { margin: 0; }
+.radios label:has(input:checked) { border-color: var(--primary); background: var(--primary-light); }
+
+/* ---------- プレビュー（A4 紙面） ---------- */
+.preview-wrap { position: sticky; top: 64px; }
+.preview-label { font-size: 12px; color: var(--muted); margin: 0 0 6px; }
+.paper {
+  width: 210mm; max-width: 100%;
+  min-height: 297mm;
+  margin: 0 auto;
+  background: var(--paper);
+  box-shadow: 0 1px 3px rgba(15,23,42,.08), 0 8px 24px rgba(15,23,42,.08);
+  padding: 16mm 16mm 14mm;
+  color: var(--ink);
+  font-size: 10.5pt;
+  line-height: 1.7;
+}
+@media (max-width: 1000px) { .preview-wrap { position: static; } .paper { padding: 8mm; min-height: 0; } }
+
+.doc-head { border-bottom: 2.5px solid var(--ink); padding-bottom: 8px; margin-bottom: 14px; }
+.doc-kicker { font-size: 9pt; color: var(--primary); font-weight: 700; letter-spacing: .08em; }
+.doc-title { font-size: 17pt; font-weight: 800; margin: 2px 0 4px; line-height: 1.35; }
+.doc-meta { display: flex; justify-content: space-between; gap: 12px; font-size: 9.5pt; color: var(--text); flex-wrap: wrap; }
+
+.sec { margin: 0 0 12px; break-inside: avoid; }
+.sec h3 {
+  font-size: 11pt; margin: 0 0 4px; color: var(--ink);
+  display: flex; align-items: baseline; gap: 6px;
+  border-left: 4px solid var(--primary); padding-left: 8px;
+}
+.sec h3 small { font-weight: 400; color: var(--muted); font-size: 8.5pt; }
+.sec .body { padding-left: 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.empty { color: #94a3b8; font-style: italic; }
+
+.vars { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; padding-left: 12px; }
+.vars .k { font-size: 9pt; color: #fff; background: var(--ink); border-radius: 4px; padding: 0 6px; align-self: center; }
+.quote {
+  margin-left: 12px; padding: 8px 12px;
+  background: #f8fafc; border-left: 3px solid #cbd5e1;
+  white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.quote .date { display: block; font-size: 8.5pt; color: var(--muted); margin-bottom: 2px; }
+
+.result { display: grid; grid-template-columns: 1fr 44mm; gap: 12px; align-items: center; padding-left: 12px; }
+.result svg { width: 100%; height: auto; display: block; }
+.rbox { border: 1.5px solid var(--ink); border-radius: 8px; padding: 10px; text-align: center; }
+.rbox .rl { font-size: 9pt; color: var(--muted); }
+.rbox .rv { font-size: 26pt; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.rbox .n { font-size: 9pt; color: var(--text); margin-top: 2px; }
+.rbox .eq { font-size: 8.5pt; color: var(--text); margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--line); font-variant-numeric: tabular-nums; }
+.rbox .eq:empty { display: none; }
+.check { display: flex; align-items: center; gap: 8px; color: var(--ink); font-size: 14px; cursor: pointer; }
+.check input { margin: 0; width: 16px; height: 16px; }
+.scale { margin-top: 10px; }
+.scale svg { width: 100%; height: auto; }
+
+.concl { padding-left: 12px; display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 4px; }
+.concl span { font-size: 10pt; color: var(--muted); }
+.concl span.on { color: var(--ink); font-weight: 800; }
+.concl span.on::before { content: "■ "; color: var(--primary); }
+.concl span:not(.on)::before { content: "□ "; }
+
+.doc-foot { margin-top: 10px; padding-top: 6px; border-top: 1px solid var(--line); font-size: 8pt; color: var(--muted); text-align: right; }
+
+.print-help { position: fixed; inset: 0; z-index: 50; background: rgba(15,23,42,.45); display: grid; place-items: center; padding: 16px; }
+.print-help[hidden] { display: none; }
+.print-help-box { background: var(--paper); border-radius: 12px; padding: 20px 22px; max-width: 520px; color: var(--ink); box-shadow: 0 12px 40px rgba(15,23,42,.25); }
+.print-help-box ol { padding-left: 1.3em; margin: 10px 0 14px; }
+.print-help-box li { margin: 6px 0; }
+kbd { font-family: inherit; font-size: 12px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; background: #f8fafc; }
+
+/* ---------- 印刷 ---------- */
+@page { size: A4 portrait; margin: 12mm 14mm; }
+@media print {
+  body { background: #fff; }
+  .topbar, .form, .preview-label, .print-help { display: none !important; }
+  .layout { display: block; padding: 0; }
+  .preview-wrap { position: static; }
+  .paper { width: auto; min-height: 0; box-shadow: none; padding: 0; margin: 0; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <h1>測定データ レポートメーカー</h1>
+  <span class="saved" id="saved">入力内容はこのブラウザに自動保存されます</span>
+  <button class="small" id="btnSample" title="動作確認用のデータを入れる">見本データ</button>
+  <button class="small" id="btnClear">すべて消す</button>
+  <button class="primary" id="btnPrint">PDFで保存</button>
+</header>
+
+<div class="print-help" id="printHelp" hidden role="alert">
+  <div class="print-help-box">
+    <strong>印刷画面が開けませんでした</strong>
+    <ol>
+      <li>キーボードで <kbd>Ctrl</kbd> + <kbd>P</kbd>（Mac は <kbd>⌘</kbd> + <kbd>P</kbd>）を押してみてください。</li>
+      <li>それでも開かないときは、このファイルを<b>ダウンロードしてから Chrome で開き直して</b>ください。Google ドライブや Classroom のプレビュー画面では印刷できません。</li>
+      <li>印刷画面では「送信先」を <b>PDF に保存</b> にします。</li>
+    </ol>
+    <button id="btnHelpClose">閉じる</button>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- ================= 入力 ================= -->
+  <section class="form">
+    <div class="card">
+      <h2>基本情報</h2>
+      <div class="row3">
+        <div><label for="f_class">クラス</label><input type="text" id="f_class" placeholder="2年3組"></div>
+        <div><label for="f_num">番号</label><input type="text" id="f_num" placeholder="15"></div>
+        <div><label for="f_name">氏名</label><input type="text" id="f_name" placeholder="情報 太郎"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="no">1</span>測った2変数</h2>
+      <p class="hint">散布図の横軸（x）と縦軸（y）の名前になります。</p>
+      <div class="row2">
+        <div><label for="f_x">変数1（横軸 x）</label><input type="text" id="f_x" placeholder="睡眠時間"></div>
+        <div><label for="f_xu">単位</label><input type="text" id="f_xu" placeholder="時間"></div>
+      </div>
+      <div class="row2">
+        <div><label for="f_y">変数2（縦軸 y）</label><input type="text" id="f_y" placeholder="次の日の気分"></div>
+        <div><label for="f_yu">単位</label><input type="text" id="f_yu" placeholder="1〜5"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="no">2</span>なぜこの2変数を選んだか</h2>
+      <p class="hint">自分の生活場面や、過去の経験と結びつけて。</p>
+      <textarea id="f_reason" rows="4"></textarea>
+    </div>
+
+    <div class="card">
+      <h2><span class="no">3</span>測定前の直感</h2>
+      <p class="hint">夏休み前に書いた直感を、回答したGoogleフォームからそのままコピーして貼り付け。未回答の場合は、データを見る前に設定時の記憶をもとに記入すること。</p>
+      <textarea id="f_intuition" rows="5"></textarea>
+      <div class="counter" id="c_intuition">0字</div>
+    </div>
+
+    <div class="card">
+      <h2><span class="no">4</span>データの入力</h2>
+      <p class="hint">スプレッドシートで表の範囲を選んでコピー（Ctrl+C）し、下の欄に貼り付け（Ctrl+V）。見出し行や日付の列が入っていてもOK。空欄の日は自動で除外されます。</p>
+      <textarea id="f_data" class="data" spellcheck="false" placeholder="日付	睡眠時間	気分
+7/21	7.5	4
+7/22	6	3
+…"></textarea>
+      <div class="row2" id="colPick" hidden>
+        <div><label for="f_colx">横軸（x）に使う列</label><select id="f_colx"></select></div>
+        <div><label for="f_coly">縦軸（y）に使う列</label><select id="f_coly"></select></div>
+      </div>
+      <div class="status" id="dataStatus" hidden></div>
+    </div>
+
+    <div class="card">
+      <h2><span class="no">5</span>散布図と相関係数</h2>
+      <p class="hint">データを貼ると、右の紙面に散布図と相関係数 r が自動で入ります。</p>
+      <label class="check"><input type="checkbox" id="f_line" checked> 近似直線（回帰直線）を表示する</label>
+    </div>
+
+    <div class="card">
+      <h2><span class="no">6</span>結論</h2>
+      <div class="radios" id="f_concl">
+        <label><input type="radio" name="concl" value="予想通りだった"> 予想通りだった</label>
+        <label><input type="radio" name="concl" value="予想と違った"> 予想と違った</label>
+        <label><input type="radio" name="concl" value="どちらとも言えない"> どちらとも言えない</label>
+      </div>
+      <label for="f_basis">根拠（相関係数の数値や、散布図の見え方にもとづいて）</label>
+      <textarea id="f_basis" rows="6"></textarea>
+    </div>
+  </section>
+
+  <!-- ================= プレビュー ================= -->
+  <section class="preview-wrap">
+    <p class="preview-label">プレビュー（このままPDFになります）</p>
+    <article class="paper" id="paper">
+      <div class="doc-head">
+        <div class="doc-kicker">情報Ⅰ データサイエンス ── 相関と因果</div>
+        <div class="doc-title">私のデータ ── 相関と因果の答え合わせ</div>
+        <div class="doc-meta"><span id="p_who"></span><span id="p_date"></span></div>
+      </div>
+
+      <div class="sec">
+        <h3>1. 測った2変数</h3>
+        <div class="vars">
+          <span class="k">x</span><span id="p_x"></span>
+          <span class="k">y</span><span id="p_y"></span>
+        </div>
+      </div>
+
+      <div class="sec">
+        <h3>2. なぜこの2変数を選んだか</h3>
+        <div class="body" id="p_reason"></div>
+      </div>
+
+      <div class="sec">
+        <h3>3. 測定前の直感</h3>
+        <div class="quote"><span class="date">測定前に書いたもの</span><span id="p_intuition"></span></div>
+      </div>
+
+      <div class="sec">
+        <h3>4. 散布図 ／ 5. 相関係数</h3>
+        <div class="result">
+          <div id="p_chart"></div>
+          <div class="rbox">
+            <div class="rl">相関係数</div>
+            <div class="rv" id="p_r">—</div>
+            <div class="n" id="p_n"></div>
+            <div class="eq" id="p_eq"></div>
+            <div class="scale" id="p_scale"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <h3>6. 結論</h3>
+        <div class="concl" id="p_concl">
+          <span>予想通りだった</span><span>予想と違った</span><span>どちらとも言えない</span>
+        </div>
+        <div class="body" id="p_basis"></div>
+      </div>
+
+      <div class="doc-foot">相関係数 r はピアソンの積率相関係数（欠損のある日を除いて計算）</div>
+    </article>
+  </section>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const STORE_KEY = "inf01-30days-report-v1";
+  const FIELDS = ["f_class", "f_num", "f_name", "f_x", "f_xu", "f_y", "f_yu", "f_reason", "f_intuition", "f_data", "f_basis"];
+  const SVGNS = "http://www.w3.org/2000/svg";
+
+  let colX = null, colY = null; // 使う列（ユーザー選択を保存）
+
+  // ---------- 保存・復元 ----------
+  function save() {
+    const state = {};
+    FIELDS.forEach((k) => (state[k] = $(k).value));
+    const c = document.querySelector('input[name="concl"]:checked');
+    state.concl = c ? c.value : "";
+    state.colX = colX; state.colY = colY;
+    state.line = $("f_line").checked;
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify(state));
+      $("saved").textContent = "自動保存しました " + new Date().toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
+    } catch (e) {
+      $("saved").textContent = "この環境では自動保存できません（PDFで保存してください）";
+    }
+  }
+  function load() {
+    let state = null;
+    try { state = JSON.parse(localStorage.getItem(STORE_KEY) || "null"); } catch (e) {}
+    if (!state) return;
+    FIELDS.forEach((k) => { if (typeof state[k] === "string") $(k).value = state[k]; });
+    document.querySelectorAll('input[name="concl"]').forEach((r) => (r.checked = r.value === state.concl));
+    colX = state.colX ?? null; colY = state.colY ?? null;
+    if (typeof state.line === "boolean") $("f_line").checked = state.line;
+  }
+
+  // ---------- データ解析 ----------
+  function normalize(s) {
+    return s
+      .replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0))
+      .replace(/[．。]/g, ".")
+      .replace(/[－ー−‐]/g, "-")
+      .replace(/[：]/g, ":")
+      .replace(/[，]/g, ",")
+      .replace(/　/g, " ")
+      .trim();
+  }
+  // 数値に変換（"7:30" のような時刻は 7.5 時間に換算）。数値でなければ null
+  function toNum(raw) {
+    const s = normalize(raw || "");
+    if (s === "") return null;
+    let m = s.match(/^(-?\d+):([0-5]\d)$/);
+    if (m) { const h = +m[1]; return h + Math.sign(h || 1) * (+m[2] / 60); }
+    if (/^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i.test(s)) return parseFloat(s);
+    return null;
+  }
+  function parseTable(text) {
+    const lines = text.split(/\r?\n/).filter((l) => l.trim() !== "");
+    if (!lines.length) return null;
+    const sep = text.includes("\t") ? "\t" : ",";
+    const rows = lines.map((l) => l.split(sep));
+    const ncol = Math.max(...rows.map((r) => r.length));
+    rows.forEach((r) => { while (r.length < ncol) r.push(""); });
+    // 1行目に数値でない文字があれば見出し行とみなす
+    const first = rows[0];
+    const hasHeader = first.some((c) => normalize(c) !== "" && toNum(c) === null);
+    const header = hasHeader ? first.map((c, i) => normalize(c) || "列" + (i + 1)) : first.map((_, i) => "列" + (i + 1));
+    const body = hasHeader ? rows.slice(1) : rows;
+    // 各列の「数値の割合」
+    const numRatio = header.map((_, j) => {
+      const filled = body.filter((r) => normalize(r[j]) !== "");
+      if (!filled.length) return 0;
+      return filled.filter((r) => toNum(r[j]) !== null).length / filled.length;
+    });
+    return { header, body, ncol, numRatio, hasHeader };
+  }
+
+  function stats(xs, ys) {
+    const n = xs.length;
+    const mx = xs.reduce((a, b) => a + b, 0) / n;
+    const my = ys.reduce((a, b) => a + b, 0) / n;
+    let sxy = 0, sxx = 0, syy = 0;
+    for (let i = 0; i < n; i++) {
+      const dx = xs[i] - mx, dy = ys[i] - my;
+      sxy += dx * dy; sxx += dx * dx; syy += dy * dy;
+    }
+    const r = sxx > 0 && syy > 0 ? sxy / Math.sqrt(sxx * syy) : null;
+    // 近似直線 y = a x + b（最小二乗法）
+    const a = sxx > 0 ? sxy / sxx : null;
+    const b = a !== null ? my - a * mx : null;
+    return { n, r, a, b, flatX: sxx === 0, flatY: syy === 0 };
+  }
+
+  // ---------- 列の選択 ----------
+  function setupColumns(tbl) {
+    const pick = $("colPick");
+    if (!tbl || tbl.ncol < 2) { pick.hidden = true; return; }
+    const numericCols = tbl.header.map((_, j) => j).filter((j) => tbl.numRatio[j] >= 0.5);
+    // 既定：数値の列のうち最後の2列（日付列を避けるため）
+    const defs = numericCols.length >= 2 ? numericCols.slice(-2) : [tbl.ncol - 2, tbl.ncol - 1];
+    if (colX === null || colX >= tbl.ncol) colX = defs[0];
+    if (colY === null || colY >= tbl.ncol) colY = defs[1];
+    [$("f_colx"), $("f_coly")].forEach((sel, k) => {
+      sel.innerHTML = "";
+      tbl.header.forEach((h, j) => {
+        const o = document.createElement("option");
+        o.value = j; o.textContent = h;
+        sel.appendChild(o);
+      });
+      sel.value = k === 0 ? colX : colY;
+    });
+    pick.hidden = tbl.ncol <= 2;
+  }
+
+  // ---------- 目盛り ----------
+  function niceStep(range, count) {
+    const raw = range / count;
+    const p = Math.pow(10, Math.floor(Math.log10(raw)));
+    const f = raw / p;
+    return (f < 1.5 ? 1 : f < 3 ? 2 : f < 7 ? 5 : 10) * p;
+  }
+  function niceDomain(vals) {
+    let lo = Math.min(...vals), hi = Math.max(...vals);
+    if (lo === hi) { lo -= 1; hi += 1; }
+    let step = niceStep(hi - lo, 5);
+    // 5段階評価などの整数データでは 0.5 刻みの目盛りにしない
+    if (vals.every(Number.isInteger)) step = Math.max(step, 1);
+    lo = Math.floor(lo / step) * step;
+    hi = Math.ceil(hi / step) * step;
+    const ticks = [];
+    for (let v = lo; v <= hi + step / 2; v += step) ticks.push(+v.toFixed(10));
+    return { lo, hi, ticks, step };
+  }
+  function fmt(v, step) {
+    const d = Math.max(0, -Math.floor(Math.log10(step) + 1e-9));
+    return v.toFixed(d);
+  }
+
+  function el(name, attrs, text) {
+    const e = document.createElementNS(SVGNS, name);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function axisLabel(name, unit, fallback) {
+    const n = name.trim() || fallback;
+    return unit.trim() ? `${n}（${unit.trim()}）` : n;
+  }
+
+  // ---------- 散布図 ----------
+  function drawScatter(xs, ys, xl, yl, fit) {
+    const W = 460, H = 340, m = { l: 58, r: 14, t: 14, b: 50 };
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "散布図" });
+    const dx = niceDomain(xs), dy = niceDomain(ys);
+    const pad = 12; // 軸の上に点が重ならないよう内側に余白
+    const px = (v) => m.l + pad + ((v - dx.lo) / (dx.hi - dx.lo)) * (W - m.l - m.r - pad * 2);
+    const py = (v) => H - m.b - pad - ((v - dy.lo) / (dy.hi - dy.lo)) * (H - m.t - m.b - pad * 2);
+    const font = "font-family:inherit";
+
+    dx.ticks.forEach((t) => {
+      svg.appendChild(el("line", { x1: px(t), x2: px(t), y1: m.t, y2: H - m.b, stroke: "#e2e8f0", "stroke-width": 1 }));
+      svg.appendChild(el("text", { x: px(t), y: H - m.b + 16, "text-anchor": "middle", "font-size": 11, fill: "#475569", style: font }, fmt(t, dx.step)));
+    });
+    dy.ticks.forEach((t) => {
+      svg.appendChild(el("line", { x1: m.l, x2: W - m.r, y1: py(t), y2: py(t), stroke: "#e2e8f0", "stroke-width": 1 }));
+      svg.appendChild(el("text", { x: m.l - 8, y: py(t) + 4, "text-anchor": "end", "font-size": 11, fill: "#475569", style: font }, fmt(t, dy.step)));
+    });
+    svg.appendChild(el("line", { x1: m.l, x2: W - m.r, y1: H - m.b, y2: H - m.b, stroke: "#0f172a", "stroke-width": 1.2 }));
+    svg.appendChild(el("line", { x1: m.l, x2: m.l, y1: m.t, y2: H - m.b, stroke: "#0f172a", "stroke-width": 1.2 }));
+
+    svg.appendChild(el("text", { x: (m.l + W - m.r) / 2, y: H - 10, "text-anchor": "middle", "font-size": 12.5, "font-weight": 700, fill: "#0f172a", style: font }, xl));
+    const yLab = el("text", { x: 0, y: 0, "text-anchor": "middle", "font-size": 12.5, "font-weight": 700, fill: "#0f172a", style: font, transform: `translate(15 ${(m.t + H - m.b) / 2}) rotate(-90)` }, yl);
+    svg.appendChild(yLab);
+
+    // 同じ位置の点をまとめる
+    const groups = new Map();
+    xs.forEach((x, i) => {
+      const k = x + "," + ys[i];
+      groups.set(k, (groups.get(k) || 0) + 1);
+    });
+    // 近似直線（横軸のデータ範囲だけ引く。点の下に描く）
+    if (fit) {
+      const x1 = Math.min(...xs), x2 = Math.max(...xs);
+      const clip = el("clipPath", { id: "plotArea" });
+      clip.appendChild(el("rect", { x: m.l, y: m.t, width: W - m.l - m.r, height: H - m.t - m.b }));
+      svg.appendChild(clip);
+      svg.appendChild(el("line", {
+        x1: px(x1), y1: py(fit.a * x1 + fit.b), x2: px(x2), y2: py(fit.a * x2 + fit.b),
+        stroke: "#f97316", "stroke-width": 2, "stroke-dasharray": "6 4", "clip-path": "url(#plotArea)",
+      }));
+    }
+
+    groups.forEach((cnt, k) => {
+      const [x, y] = k.split(",").map(Number);
+      const cx = px(x), cy = py(y);
+      svg.appendChild(el("circle", { cx, cy, r: cnt > 1 ? 6.5 : 5, fill: "#2563eb", "fill-opacity": cnt > 1 ? 0.9 : 0.7, stroke: "#fff", "stroke-width": 1.2 }));
+      if (cnt > 1) {
+        svg.appendChild(el("text", { x: cx + 9, y: cy - 6, "font-size": 10.5, "font-weight": 700, fill: "#1e3a8a", style: font }, "×" + cnt));
+      }
+    });
+    return svg;
+  }
+
+  // -1〜+1 の目盛りに r の位置を示す
+  function drawScale(r) {
+    const W = 150, H = 40, l = 10, rr = 140;
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}` });
+    const x = (v) => l + ((v + 1) / 2) * (rr - l);
+    svg.appendChild(el("line", { x1: l, x2: rr, y1: 14, y2: 14, stroke: "#94a3b8", "stroke-width": 2 }));
+    [-1, 0, 1].forEach((v) => {
+      svg.appendChild(el("line", { x1: x(v), x2: x(v), y1: 9, y2: 19, stroke: "#94a3b8", "stroke-width": 1.5 }));
+      svg.appendChild(el("text", { x: x(v), y: 34, "text-anchor": "middle", "font-size": 10, fill: "#64748b" }, v > 0 ? "+1" : String(v)));
+    });
+    if (r != null) {
+      svg.appendChild(el("path", { d: `M${x(r)} 14 l-5 -10 h10 z`, fill: "#2563eb" }));
+    }
+    return svg;
+  }
+
+  // ---------- プレビュー更新 ----------
+  function setText(id, value, placeholder) {
+    const node = $(id);
+    const v = (value || "").trim();
+    node.textContent = v || placeholder;
+    node.classList.toggle("empty", !v);
+  }
+
+  function render() {
+    const cls = $("f_class").value.trim(), num = $("f_num").value.trim(), name = $("f_name").value.trim();
+    const who = [cls, num && num + "番", name].filter(Boolean).join("　");
+    setText("p_who", who, "クラス・番号・氏名");
+    $("p_date").textContent = "作成日 " + new Date().toLocaleDateString("ja-JP");
+
+    const xName = $("f_x").value, yName = $("f_y").value, xu = $("f_xu").value, yu = $("f_yu").value;
+    setText("p_x", xName && axisLabel(xName, xu, ""), "（変数1と単位）");
+    setText("p_y", yName && axisLabel(yName, yu, ""), "（変数2と単位）");
+    setText("p_reason", $("f_reason").value, "（選んだ理由）");
+    setText("p_intuition", $("f_intuition").value, "（測定前に書いた直感をここに再掲）");
+    setText("p_basis", $("f_basis").value, "（根拠）");
+
+    const len = [...$("f_intuition").value.replace(/\s/g, "")].length;
+    $("c_intuition").textContent = len + "字";
+    $("c_intuition").classList.toggle("over", len > 200);
+
+    const c = document.querySelector('input[name="concl"]:checked');
+    document.querySelectorAll("#p_concl span").forEach((s) => s.classList.toggle("on", !!c && s.textContent === c.value));
+
+    renderData();
+  }
+
+  function renderData() {
+    const status = $("dataStatus");
+    const chart = $("p_chart");
+    chart.innerHTML = "";
+    $("p_scale").innerHTML = "";
+    $("p_eq").innerHTML = "";
+    const showStatus = (msg, warn) => { status.hidden = false; status.textContent = msg; status.classList.toggle("warn", !!warn); };
+    const placeholderChart = (msg) => {
+      chart.innerHTML = "";
+      const d = document.createElement("div");
+      d.className = "empty";
+      d.style.cssText = "border:1.5px dashed #cbd5e1;border-radius:8px;height:62mm;display:grid;place-items:center;font-size:10pt";
+      d.textContent = msg;
+      chart.appendChild(d);
+      $("p_r").textContent = "—";
+      $("p_n").textContent = "";
+      $("p_scale").appendChild(drawScale(null));
+    };
+
+    const tbl = parseTable($("f_data").value);
+    setupColumns(tbl);
+    if (!tbl) { status.hidden = true; placeholderChart("ここに散布図が入ります"); return; }
+    if (tbl.ncol < 2) { showStatus("列が1つしかありません。2つの変数の列をまとめて選んでコピーしてください。", true); placeholderChart("データの列が足りません"); return; }
+    if (colX === colY) { showStatus("横軸と縦軸に同じ列が選ばれています。", true); placeholderChart("別々の列を選んでください"); return; }
+
+    const xs = [], ys = [];
+    let skipped = 0;
+    tbl.body.forEach((row) => {
+      const x = toNum(row[colX]), y = toNum(row[colY]);
+      if (x === null || y === null) skipped++;
+      else { xs.push(x); ys.push(y); }
+    });
+
+    const msgs = [`${tbl.body.length}行を読み込み、${xs.length}日分を使いました。`];
+    if (skipped) msgs.push(`空欄や数値でない値がある ${skipped}日分は除外しています。`);
+    if (xs.length < 3) { showStatus(msgs.join("") + "相関係数を出すには3日分以上必要です。", true); placeholderChart("データが足りません"); return; }
+
+    const st = stats(xs, ys);
+    const xl = axisLabel($("f_x").value, $("f_xu").value, tbl.hasHeader ? tbl.header[colX] : "変数1");
+    const yl = axisLabel($("f_y").value, $("f_yu").value, tbl.hasHeader ? tbl.header[colY] : "変数2");
+    const showLine = $("f_line").checked && st.a !== null;
+    chart.appendChild(drawScatter(xs, ys, xl, yl, showLine ? st : null));
+    $("p_eq").innerHTML = "";
+    if (showLine) {
+      const sig = (v) => { const d = Math.max(2, 2 - Math.floor(Math.log10(Math.abs(v) || 1))); return +v.toFixed(Math.min(d, 4)); };
+      const a = sig(st.a), b = sig(st.b);
+      const eq = `y = ${a}x ${b < 0 ? "−" : "+"} ${Math.abs(b)}`.replace(/^y = -/, "y = −");
+      const sw = document.createElement("span");
+      sw.style.cssText = "display:inline-block;width:16px;border-top:2px dashed #f97316;vertical-align:middle;margin-right:4px";
+      $("p_eq").append(sw, "近似直線", document.createElement("br"), eq);
+    }
+
+    if (st.r === null) {
+      msgs.push((st.flatX ? "横軸" : "縦軸") + "の値がすべて同じなので、相関係数は計算できません。");
+      $("p_r").textContent = "計算不可";
+    } else {
+      const rStr = (st.r < 0 ? "−" : "") + Math.abs(st.r).toFixed(2);
+      $("p_r").textContent = "r = " + rStr;
+    }
+    $("p_n").textContent = `データ数 n = ${st.n}`;
+    $("p_scale").appendChild(drawScale(st.r));
+    showStatus(msgs.join(""), skipped > 0 || st.r === null);
+  }
+
+  // ---------- イベント ----------
+  let saveTimer = null;
+  function onChange() {
+    render();
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(save, 400);
+  }
+  // 貼り直したら列の選択をやり直す（onChange より先に登録）
+  $("f_data").addEventListener("input", () => { colX = colY = null; });
+  FIELDS.forEach((k) => $(k).addEventListener("input", onChange));
+  document.querySelectorAll('input[name="concl"]').forEach((r) => r.addEventListener("change", onChange));
+  $("f_line").addEventListener("change", onChange);
+  $("f_colx").addEventListener("change", (e) => { colX = +e.target.value; onChange(); });
+  $("f_coly").addEventListener("change", (e) => { colY = +e.target.value; onChange(); });
+
+  $("btnPrint").addEventListener("click", () => {
+    const base = document.title;
+    const name = $("f_name").value.trim();
+    document.title = "データ" + (name ? "_" + name : "");
+    // 埋め込み表示（Google ドライブのプレビュー等）では印刷が無視されることがあるので、
+    // 印刷画面が開いたかどうかを確かめ、開かなければ案内を出す
+    let opened = false;
+    const mark = () => (opened = true);
+    window.addEventListener("beforeprint", mark, { once: true });
+    try { window.print(); } catch (e) {}
+    setTimeout(() => {
+      document.title = base;
+      window.removeEventListener("beforeprint", mark);
+      if (!opened) $("printHelp").hidden = false;
+    }, 800);
+  });
+  $("btnHelpClose").addEventListener("click", () => ($("printHelp").hidden = true));
+
+  $("btnClear").addEventListener("click", () => {
+    if (!confirm("入力した内容をすべて消します。よろしいですか？")) return;
+    FIELDS.forEach((k) => ($(k).value = ""));
+    document.querySelectorAll('input[name="concl"]').forEach((r) => (r.checked = false));
+    colX = colY = null;
+    try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+    render();
+    $("saved").textContent = "入力内容を消しました";
+  });
+
+  $("btnSample").addEventListener("click", () => {
+    const has = FIELDS.some((k) => $(k).value.trim());
+    if (has && !confirm("今の入力を見本データで上書きします。よろしいですか？")) return;
+    const sleep = [7.5, 6, 8, 5.5, 7, 6.5, 8.5, 7, 6, 5, 7.5, 8, 6.5, 7, "", 6, 7.5, 8, 5.5, 6.5, 7, 9, 6, 7.5, 6.5, 7, 8, 5.5, 6, 7];
+    const mood = [4, 3, 4, 2, 3, 3, 5, 4, 3, 2, 4, 4, 3, 3, 4, 2, 4, 5, 3, 3, 4, 4, 3, 3, 4, 4, 5, 2, 3, ""];
+    const lines = ["日付\t睡眠時間\t次の日の気分"];
+    for (let i = 0; i < 30; i++) {
+      const d = new Date(2026, 6, 21 + i);
+      lines.push(`${d.getMonth() + 1}/${d.getDate()}\t${sleep[i]}\t${mood[i]}`);
+    }
+    $("f_class").value = "2年3組"; $("f_num").value = "15"; $("f_name").value = "情報 太郎";
+    $("f_x").value = "睡眠時間"; $("f_xu").value = "時間";
+    $("f_y").value = "次の日の気分"; $("f_yu").value = "1〜5の5段階";
+    $("f_reason").value = "テスト期間に睡眠を削ったとき、翌日ずっとイライラしていた経験がある。睡眠時間と気分に本当に関係があるのか、自分のデータで確かめたかった。";
+    $("f_intuition").value = "睡眠時間が長い日ほど、次の日の気分は良くなると思う。特に6時間を切ると明らかに気分が落ちるはずだ。ただ、夏休みは予定がない日も多いので、たくさん寝ても気分が上がらない日もあるかもしれない。それでも全体としては、はっきりした正の相関が出ると予想する。";
+    $("f_data").value = lines.join("\n");
+    colX = colY = null;
+    document.querySelectorAll('input[name="concl"]').forEach((r) => (r.checked = r.value === "予想通りだった"));
+    $("f_basis").value = "相関係数は正の値になり、散布図でも右上がりの傾向が見えた。6時間以下の日は気分が2〜3に集中していて、直感とおおむね一致した。ただし、7時間前後の日は気分がばらついていて、睡眠以外の要因も大きそうだ。";
+    onChange();
+  });
+
+  load();
+  render();
+})();
+</script>
+</body>
+</html>
